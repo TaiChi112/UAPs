@@ -1,0 +1,23 @@
+{
+  "name": "intelligent_profile_version",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"bun run dev:api\" \"bun run dev:web\"",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:api": "bun run --cwd apps/api dev",
+    "build:web": "bun run --cwd apps/web build",
+    "start:web": "bun run --cwd apps/web start",
+    "typecheck:api": "bun run --cwd apps/api typecheck",
+    "lint:web": "bun run --cwd apps/web lint"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}
