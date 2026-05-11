@@ -378,6 +378,8 @@ scripts/
 └── smoke-hr-flow.ps1   # PowerShell smoke test: validates home page, HR filter, search, quick-view, access request
 ```
 
+For the product vision, MVP scope, and a language-specific README in English-first format, see [apps/web/README.md](apps/web/README.md).
+
 ### 4.2 API Surface
 
 **Base path:** `/v1`

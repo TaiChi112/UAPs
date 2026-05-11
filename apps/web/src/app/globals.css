@@ -474,6 +474,155 @@ a {
   background: #fff;
 }
 
+.resume-product-wall {
+  border-color: #9a9a9a;
+  background: #ffffff;
+}
+
+.resume-product-card {
+  border: 1px solid #2f2f2f;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.resume-product-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  border-bottom: 1px solid #e6e6e6;
+  font-weight: 650;
+}
+
+.resume-product-summary::-webkit-details-marker {
+  display: none;
+}
+
+.resume-product-title {
+  color: #101010;
+}
+
+.resume-product-date {
+  color: #5c5c5c;
+  font-size: 0.84rem;
+  font-family: var(--font-mono), monospace;
+}
+
+.resume-product-panel {
+  padding: 0.9rem;
+  background: #fafafa;
+}
+
+.resume-product-points {
+  margin: 0;
+  padding-left: 1rem;
+  color: #232323;
+}
+
+.resume-product-points li + li {
+  margin-top: 0.35rem;
+}
+
+.resume-product-card[open] .resume-product-summary {
+  background: #f3f3f3;
+}
+
+.resume-product-card .btn-primary {
+  background: #111111;
+  color: #ffffff;
+}
+
+.resume-product-card .btn-secondary {
+  background: #ffffff;
+  border-color: #5b5b5b;
+  color: #111111;
+}
+
+.resume-product-preview {
+  border: 1px dashed #707070;
+  border-radius: 0.7rem;
+  padding: 0.75rem;
+  background: #ffffff;
+  color: #1c1c1c;
+}
+
+.resume-product-preview-title {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.resume-doc {
+  border: 1px solid #2a2a2a;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #111;
+  padding: clamp(1rem, 3vw, 2rem);
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.resume-doc-header h1 {
+  font-size: clamp(1.8rem, 3.2vw, 2.7rem);
+  line-height: 1.1;
+  font-weight: 760;
+}
+
+.resume-role {
+  font-size: clamp(1rem, 1.7vw, 1.6rem);
+  font-weight: 500;
+}
+
+.resume-contact-line,
+.resume-link-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.2rem;
+  font-weight: 650;
+}
+
+.resume-section-title {
+  margin-top: 0.5rem;
+  border-top: 1px solid #1f1f1f;
+  padding-top: 0.7rem;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.resume-project-item {
+  padding-top: 0.2rem;
+}
+
+.resume-project-title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.resume-project-title-row h4 {
+  font-size: 1.25rem;
+  text-decoration: underline;
+}
+
+.resume-project-title-row p {
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.resume-bullets {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.resume-bullets li {
+  margin-bottom: 0.35rem;
+}
+
 h3,
 h4,
 p {
@@ -522,5 +671,15 @@ pre {
 
   .compare-grid.two {
     grid-template-columns: 1fr;
+  }
+
+  .resume-product-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resume-project-title-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
