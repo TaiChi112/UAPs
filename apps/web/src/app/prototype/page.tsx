@@ -323,7 +323,7 @@ export default function ResumePrototype() {
                           </div>
                           <div className="text-gray-600 font-medium">{exp.company}</div>
                           <ul className="list-disc list-inside text-sm text-gray-700 mt-2 space-y-1">
-                            {exp.responsibilities.map((resp, idx) => (
+                            {exp.responsibilities.map((resp: string, idx: number) => (
                               <li key={idx}>{resp}</li>
                             ))}
                           </ul>
@@ -346,8 +346,8 @@ export default function ResumePrototype() {
                           <div className="text-sm text-gray-500 mb-2">Role: {proj.role}</div>
                           <p className="text-sm text-gray-700 mb-3">{proj.description}</p>
                           <div className="flex flex-wrap gap-1">
-                            {proj.technologies.map(tech => (
-                              <span key={tech} className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">{tech}</span>
+                            {proj.technologies.map((tech: string, idx: number) => (
+                              <span key={idx} className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">{tech}</span>
                             ))}
                           </div>
                         </div>
@@ -364,8 +364,8 @@ export default function ResumePrototype() {
                         <CheckCircle className="w-5 h-5 text-gray-500" /> Certificates
                       </h3>
                       <ul className="space-y-2">
-                        {generatedResume.certificates.map(cert => (
-                          <li key={cert.id} className="text-sm flex items-start gap-2 text-gray-700">
+                        {generatedResume.certificates.map((cert: { id: string; name: string; year: string }, idx: number) => (
+                          <li key={idx} className="text-sm flex items-start gap-2 text-gray-700">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></span>
                             <span>{cert.name} ({cert.year})</span>
                           </li>
@@ -380,8 +380,8 @@ export default function ResumePrototype() {
                         <Award className="w-5 h-5 text-gray-500" /> Awards
                       </h3>
                       <ul className="space-y-3">
-                        {generatedResume.awards.map(award => (
-                          <li key={award.id} className="text-sm text-gray-700">
+                        {generatedResume.awards.map((award: { id: string; name: string; desc: string }, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700">
                             <div className="font-semibold">{award.name}</div>
                             <div className="text-gray-500">{award.desc}</div>
                           </li>
