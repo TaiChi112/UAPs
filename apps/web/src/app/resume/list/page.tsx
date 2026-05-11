@@ -1,276 +1,240 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createResume, deleteResumeById, getResumeBaseline, getResumes, Resume, updateResumeById } from "@/lib/api";
+import Link from "next/link";
+import { useState } from "react";
+import { mockResumeFormat } from "@/lib/mock-resume-format";
 
-type ResumeFormState = {
-  versionName: string;
-  targetJobTitle: string;
-  targetCompany: string;
-  visibility: Resume["visibility"];
-  status: Resume["status"];
-  isActive: boolean;
+type MockResumeProduct = {
+  id: string;
+  jobTitle: string;
+  company: string;
+  updatedAt: string;
+  highlights: string[];
 };
 
-const emptyForm: ResumeFormState = {
-  versionName: "",
-  targetJobTitle: "",
-  targetCompany: "",
-  visibility: "private",
-  status: "Draft",
-  isActive: false,
-};
+const mockResumeProductsInitial: MockResumeProduct[] = [
+  {
+    id: "resume-01",
+    jobTitle: "AI Engineer",
+    company: "Company A",
+    updatedAt: "2026-04-28",
+    highlights: ["Latest version", "Focused on GenAI delivery", "Ready to export"],
+  },
+  {
+    id: "resume-02",
+    jobTitle: "AI Engineer",
+    company: "Company B",
+    updatedAt: "2026-04-15",
+    highlights: ["Same position, different company", "Emphasis on MLOps", "Archived copy"],
+  },
+  {
+    id: "resume-03",
+    jobTitle: "Software Engineer",
+    company: "Company C",
+    updatedAt: "2026-03-30",
+    highlights: ["Different position, same company", "Backend-heavy profile", "Interview version"],
+  },
+  {
+    id: "resume-04",
+    jobTitle: "Cloud Engineer",
+    company: "Company C",
+    updatedAt: "2026-02-18",
+    highlights: ["Different position, same company", "Cloud architecture focus", "Exportable copy"],
+  },
+];
 
 export default function ResumeListPage() {
-  const [resumes, setResumes] = useState<Resume[]>([]);
-  const [baselineIndicator, setBaselineIndicator] = useState<Record<string, { complete: boolean; reason?: string }>>({});
-  const [createForm, setCreateForm] = useState<ResumeFormState>(emptyForm);
+  const [previewResumeId, setPreviewResumeId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [resumes, setResumes] = useState<MockResumeProduct[]>(mockResumeProductsInitial);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<ResumeFormState>(emptyForm);
-  const [error, setError] = useState<string | null>(null);
+  const [editJobTitle, setEditJobTitle] = useState("");
+  const [editCompany, setEditCompany] = useState("");
 
-  const load = async () => {
-    setError(null);
-    try {
-      const list = await getResumes();
-      setResumes(list);
-
-      const indicators = await Promise.all(
-        list.map(async (resume) => {
-          const baseline = await getResumeBaseline(resume.resumeId);
-          if (!baseline) {
-            return [resume.resumeId, { complete: false, reason: "Missing baseline profile" }] as const;
-          }
-
-          const hasName = Boolean(baseline.fullName?.trim());
-          const hasContact = Boolean(
-            baseline.email?.trim() || baseline.phone?.trim() || baseline.linkedinUrl?.trim() || baseline.githubUrl?.trim(),
-          );
-
-          if (!hasName) {
-            return [resume.resumeId, { complete: false, reason: "Missing full name" }] as const;
-          }
-
-          if (!hasContact) {
-            return [resume.resumeId, { complete: false, reason: "Missing contact" }] as const;
-          }
-
-          return [resume.resumeId, { complete: true }] as const;
-        }),
-      );
-
-      setBaselineIndicator(Object.fromEntries(indicators));
-    } catch {
-      setError("Failed to load resumes.");
-    }
+  const handlePreview = (resumeId: string) => {
+    setPreviewResumeId((current) => (current === resumeId ? null : resumeId));
+    setMessage(null);
   };
 
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const handleCreate: React.ComponentProps<"form">["onSubmit"] = (event) => {
-    if (!event) {
-      return;
-    }
-
-    event.preventDefault();
-    void (async () => {
-      const result = await createResume(createForm);
-      if (!result.ok) {
-        setError(result.message ?? "Unable to create resume");
-        return;
-      }
-
-      setCreateForm(emptyForm);
-      await load();
-    })();
+  const handleExport = (title: string) => {
+    setMessage(`Mock export started for ${title}`);
   };
 
-  const beginEdit = (resume: Resume) => {
-    setEditingId(resume.resumeId);
-    setEditForm({
-      versionName: resume.versionName,
-      targetJobTitle: resume.targetJobTitle ?? "",
-      targetCompany: resume.targetCompany ?? "",
-      visibility: resume.visibility,
-      status: resume.status,
-      isActive: resume.isActive,
-    });
+  const beginEdit = (r: MockResumeProduct) => {
+    setEditingId(r.id);
+    setEditJobTitle(r.jobTitle);
+    setEditCompany(r.company);
+    setMessage(null);
   };
 
-  const handleSave = async (resumeId: string) => {
-    const result = await updateResumeById(resumeId, editForm);
-    if (!result.ok) {
-      setError(result.message ?? "Unable to update resume");
-      return;
-    }
-
+  const cancelEdit = () => {
     setEditingId(null);
-    await load();
+    setEditJobTitle("");
+    setEditCompany("");
   };
 
-  const handleDelete = async (resumeId: string) => {
-    const result = await deleteResumeById(resumeId);
-    if (!result.ok) {
-      setError(result.message ?? "Unable to delete resume");
-      return;
-    }
-
-    await load();
+  const saveEdit = (id: string) => {
+    setResumes((prev) => prev.map((r) => (r.id === id ? { ...r, jobTitle: editJobTitle, company: editCompany } : r)));
+    setMessage("Saved resume metadata (mock)");
+    cancelEdit();
   };
 
   return (
     <section className="stack gap-xl">
       <div>
-        <p className="eyebrow">Resume</p>
-        <h2 className="section-title">Resume CRUD</h2>
-        <p className="subtle">Manage multiple versions and activate one profile at a time.</p>
+        <p className="eyebrow">Resume / CV</p>
+        <h2 className="section-title">Resume Product Shelf (Mock)</h2>
+        <p className="subtle">View each resume as a product card. Expand only when you want to preview details or export.</p>
+        <div className="action-row">
+          <Link href="/resume/format-preview" className="btn-secondary">
+            Open PDF Style Format Preview
+          </Link>
+          <Link href="/resume/mock-editor" className="btn-secondary">
+            Open Mock Resume Editor
+          </Link>
+        </div>
       </div>
 
-      {error ? <article className="card error-text">{error}</article> : null}
+      {message ? <article className="card success-text">{message}</article> : null}
 
-      <form className="card stack gap-sm" onSubmit={handleCreate}>
-        <h3>Create Resume</h3>
-        <input
-          className="input"
-          placeholder="Version Name"
-          value={createForm.versionName}
-          onChange={(event) => setCreateForm((state) => ({ ...state, versionName: event.target.value }))}
-          required
-        />
-        <input
-          className="input"
-          placeholder="Target Job Title"
-          value={createForm.targetJobTitle}
-          onChange={(event) => setCreateForm((state) => ({ ...state, targetJobTitle: event.target.value }))}
-        />
-        <input
-          className="input"
-          placeholder="Target Company"
-          value={createForm.targetCompany}
-          onChange={(event) => setCreateForm((state) => ({ ...state, targetCompany: event.target.value }))}
-        />
-        <div className="inline-list">
-          <select
-            className="input"
-            value={createForm.visibility}
-            onChange={(event) =>
-              setCreateForm((state) => ({ ...state, visibility: event.target.value as Resume["visibility"] }))
-            }
-          >
-            <option value="private">Private</option>
-            <option value="public">Public</option>
-            <option value="company-only">Company Only</option>
-          </select>
-          <select
-            className="input"
-            value={createForm.status}
-            onChange={(event) => setCreateForm((state) => ({ ...state, status: event.target.value as Resume["status"] }))}
-          >
-            <option value="Draft">Draft</option>
-            <option value="Published">Published</option>
-            <option value="Archived">Archived</option>
-          </select>
-          <label className="inline-list subtle">
-            <input
-              type="checkbox"
-              checked={createForm.isActive}
-              onChange={(event) => setCreateForm((state) => ({ ...state, isActive: event.target.checked }))}
-            />
-            <span>Set active</span>
-          </label>
-        </div>
-        <button className="btn-primary" type="submit">
-          Create
-        </button>
-      </form>
+      <article className="card stack gap-sm resume-product-wall">
+        <h3>All Resume Versions</h3>
+        <p className="subtle">Simple black-and-white view for now. Customization can be added as a future feature.</p>
 
-      <article className="card stack gap-sm">
-        <h3>Resume List</h3>
-        {resumes.length === 0 ? <p>No resumes yet.</p> : null}
         {resumes.map((resume) => (
-          <div key={resume.resumeId} className="card stack gap-sm">
-            {editingId === resume.resumeId ? (
-              <>
-                <input
-                  className="input"
-                  value={editForm.versionName}
-                  onChange={(event) => setEditForm((state) => ({ ...state, versionName: event.target.value }))}
-                />
-                <input
-                  className="input"
-                  value={editForm.targetJobTitle}
-                  onChange={(event) => setEditForm((state) => ({ ...state, targetJobTitle: event.target.value }))}
-                />
-                <input
-                  className="input"
-                  value={editForm.targetCompany}
-                  onChange={(event) => setEditForm((state) => ({ ...state, targetCompany: event.target.value }))}
-                />
-                <select
-                  className="input"
-                  value={editForm.visibility}
-                  onChange={(event) => setEditForm((state) => ({ ...state, visibility: event.target.value as Resume["visibility"] }))}
-                >
-                  <option value="private">Private</option>
-                  <option value="public">Public</option>
-                  <option value="company-only">Company Only</option>
-                </select>
-                <select
-                  className="input"
-                  value={editForm.status}
-                  onChange={(event) => setEditForm((state) => ({ ...state, status: event.target.value as Resume["status"] }))}
-                >
-                  <option value="Draft">Draft</option>
-                  <option value="Published">Published</option>
-                  <option value="Archived">Archived</option>
-                </select>
-                <label className="inline-list subtle">
-                  <input
-                    type="checkbox"
-                    checked={editForm.isActive}
-                    onChange={(event) => setEditForm((state) => ({ ...state, isActive: event.target.checked }))}
-                  />
-                  <span>Active</span>
-                </label>
-                <div className="inline-list">
-                  <button className="btn-primary" type="button" onClick={() => void handleSave(resume.resumeId)}>
-                    Save
-                  </button>
-                  <button className="btn-secondary" type="button" onClick={() => setEditingId(null)}>
-                    Cancel
-                  </button>
+          <details key={resume.id} className="resume-product-card">
+            <summary className="resume-product-summary">
+              {editingId === resume.id ? (
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input className="input" value={editJobTitle} onChange={(e) => setEditJobTitle(e.target.value)} />
+                  <input className="input" value={editCompany} onChange={(e) => setEditCompany(e.target.value)} />
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="inline-list">
-                  <h4>{resume.versionName}</h4>
-                  <span className="chip">{resume.status}</span>
-                  <span className="chip">{resume.visibility}</span>
-                  <span className="chip">{resume.isActive ? "Active" : "Inactive"}</span>
-                  <span className={`status-badge ${baselineIndicator[resume.resumeId]?.complete ? "approved" : "pending"}`}>
-                    {baselineIndicator[resume.resumeId]?.complete ? "Baseline complete" : "Baseline incomplete"}
-                  </span>
-                </div>
-                <p className="subtle">
-                  {resume.targetJobTitle ?? "No target role"} · {resume.targetCompany ?? "No target company"}
-                </p>
-                {baselineIndicator[resume.resumeId]?.complete ? null : (
-                  <p className="subtle">{baselineIndicator[resume.resumeId]?.reason ?? "Update baseline profile"}</p>
+              ) : (
+                <span className="resume-product-title">{resume.jobTitle} · {resume.company}</span>
+              )}
+              <span className="resume-product-date">Updated {resume.updatedAt}</span>
+            </summary>
+
+            <div className="stack gap-sm resume-product-panel">
+              <ul className="resume-product-points">
+                {resume.highlights.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+
+              <div className="inline-list">
+                {editingId === resume.id ? (
+                  <>
+                    <button className="btn-primary" type="button" onClick={() => saveEdit(resume.id)}>
+                      Save
+                    </button>
+                    <button className="btn-secondary" type="button" onClick={cancelEdit}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn-secondary" type="button" onClick={() => handlePreview(resume.id)}>
+                      Preview Full Resume
+                    </button>
+                    <button className="btn-secondary" type="button" onClick={() => beginEdit(resume)}>
+                      Edit Title/Company
+                    </button>
+                    <button className="btn-primary" type="button" onClick={() => handleExport(`${resume.jobTitle} · ${resume.company}`)}>
+                      Export (Mock)
+                    </button>
+                  </>
                 )}
-                <div className="inline-list">
-                  <button className="btn-secondary" type="button" onClick={() => beginEdit(resume)}>
-                    Edit
-                  </button>
-                  <button className="btn-secondary" type="button" onClick={() => void handleDelete(resume.resumeId)}>
-                    Delete
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
+
+              {previewResumeId === resume.id ? (
+                <article className="resume-doc">
+                  <header className="resume-doc-header stack gap-sm">
+                    <h1>{mockResumeFormat.fullName}</h1>
+                    <p className="resume-role">{mockResumeFormat.targetRole}</p>
+
+                    <div className="resume-contact-line">
+                      <span>{mockResumeFormat.location}</span>
+                      <span>{mockResumeFormat.email}</span>
+                      <span>{mockResumeFormat.phone}</span>
+                    </div>
+
+                    <div className="resume-link-line">
+                      {mockResumeFormat.links.map((link) => (
+                        <span key={link.label}>
+                          {link.label}: {link.value}
+                        </span>
+                      ))}
+                    </div>
+                  </header>
+
+                  <section className="stack gap-sm">
+                    <h3 className="resume-section-title">Summary</h3>
+                    <p>{mockResumeFormat.summary}</p>
+                  </section>
+
+                  <section className="stack gap-sm">
+                    <h3 className="resume-section-title">Projects</h3>
+                    {mockResumeFormat.projects.map((project) => (
+                      <article key={project.title} className="stack gap-sm resume-project-item">
+                        <div className="resume-project-title-row">
+                          <h4>{project.title}</h4>
+                          <p>
+                            {project.date} | {project.tag}
+                          </p>
+                        </div>
+
+                        <ul className="resume-bullets">
+                          <li>
+                            <strong>Problem/Motivation:</strong> {project.problem}
+                          </li>
+                          <li>
+                            <strong>Solution/Benefit:</strong> {project.solution}
+                          </li>
+                        </ul>
+                      </article>
+                    ))}
+                  </section>
+
+                  <section className="stack gap-sm">
+                    <h3 className="resume-section-title">Skills</h3>
+                    <ul className="resume-bullets">
+                      {mockResumeFormat.skills.map((group) => (
+                        <li key={group.label}>
+                          <strong>{group.label}:</strong> {group.items.join(", ")}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  <section className="stack gap-sm">
+                    <h3 className="resume-section-title">Education</h3>
+                    <div className="stack gap-sm">
+                      <p>
+                        <strong>{mockResumeFormat.education.degree}</strong>
+                      </p>
+                      <p>{mockResumeFormat.education.institution}</p>
+                      <p>{mockResumeFormat.education.graduation}</p>
+                      <ul className="resume-bullets">
+                        <li>
+                          <strong>Relevant Coursework:</strong> {mockResumeFormat.education.coursework.join(", ")}
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  <section className="stack gap-sm">
+                    <h3 className="resume-section-title">Additional Information</h3>
+                    <ul className="resume-bullets">
+                      {mockResumeFormat.additionalInfo.map((info) => (
+                        <li key={info}>{info}</li>
+                      ))}
+                    </ul>
+                  </section>
+                </article>
+              ) : null}
+            </div>
+          </details>
         ))}
       </article>
     </section>
