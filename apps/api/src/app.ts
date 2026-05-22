@@ -4,14 +4,17 @@ import { z } from "zod";
 import {
   createOauthState,
   createSessionToken,
+  getLocalDevSession,
   getSessionCookieName,
   getWebAppUrl,
+  isSinglePlayerMode,
   makeExpiredSessionCookie,
   makeSessionCookie,
   parseCookies,
   verifyOauthState,
   verifySessionToken,
 } from "./auth";
+import { resumeAnalysisService } from "./ai";
 import {
   createExperience,
   createProject,
@@ -43,7 +46,21 @@ import {
   updateSkill,
   upsertUserFromGithub,
 } from "./db";
+import { vaultBackendRepository } from "./db/index";
 import { buildResumeMarkdown, renderResumeImage, renderResumePdf } from "./export-renderer";
+import {
+  mapResumeBuilderExportPayload,
+  renderResumeBuilderPdf,
+} from "./resume-builder-export";
+import {
+  analyzeJobDescriptionRequestSchema,
+  createSkillInputSchema as resumeBuilderCreateSkillInputSchema,
+  duplicateResumeBodySchema,
+  newProjectDraftSchema,
+  resumeIdParamSchema,
+  updateResumeStatusBodySchema,
+  upsertSavedResumeBodySchema,
+} from "./routes/resume-builder.schemas";
 
 const githubClientId = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
@@ -129,10 +146,10 @@ const accessRequestReviewSchema = z.object({
 
 const getReturnToUrl = (value?: string) => {
   if (!value) {
-    return `${webAppUrl}/dashboard`;
+    return `${webAppUrl}/`;
   }
 
-  return value.startsWith(webAppUrl) ? value : `${webAppUrl}/dashboard`;
+  return value.startsWith(webAppUrl) ? value : `${webAppUrl}/`;
 };
 
 const unauthorizedError = {
@@ -208,7 +225,9 @@ export const app = new Elysia({ prefix: "/v1" })
     const cookieName = getSessionCookieName();
     const cookies = parseCookies(ctx.headers.cookie);
     const token = cookies[cookieName];
-    const session = await verifySessionToken(token);
+    const session = isSinglePlayerMode()
+      ? await getLocalDevSession()
+      : await verifySessionToken(token);
 
     return {
       session,
@@ -216,6 +235,14 @@ export const app = new Elysia({ prefix: "/v1" })
     };
   })
   .get("/auth/github/start", async (ctx) => {
+    if (isSinglePlayerMode()) {
+      const returnTo = getReturnToUrl(
+        typeof ctx.query.returnTo === "string" ? ctx.query.returnTo : undefined,
+      );
+
+      return Response.redirect(returnTo, 302);
+    }
+
     if (!mustHaveGithubConfig()) {
       ctx.set.status = 500;
       return {
@@ -242,6 +269,7 @@ export const app = new Elysia({ prefix: "/v1" })
     return {
       ok: true,
       data: {
+        singlePlayerMode: isSinglePlayerMode(),
         clientIdConfigured: Boolean(githubClientId),
         clientSecretConfigured: Boolean(githubClientSecret),
         apiBaseUrl: process.env.API_BASE_URL ?? "http://localhost:4000",
@@ -252,6 +280,14 @@ export const app = new Elysia({ prefix: "/v1" })
   })
   .get("/auth/github/callback", async (ctx) => {
     try {
+      if (isSinglePlayerMode()) {
+        const returnTo = getReturnToUrl(
+          typeof ctx.query.returnTo === "string" ? ctx.query.returnTo : undefined,
+        );
+
+        return Response.redirect(returnTo, 302);
+      }
+
       if (!mustHaveGithubConfig()) {
         ctx.set.status = 500;
         return {
@@ -453,6 +489,10 @@ export const app = new Elysia({ prefix: "/v1" })
     };
   })
   .post("/auth/logout", (ctx) => {
+    if (isSinglePlayerMode()) {
+      return { ok: true };
+    }
+
     ctx.set.headers["set-cookie"] = makeExpiredSessionCookie();
     return { ok: true };
   })
@@ -518,6 +558,228 @@ export const app = new Elysia({ prefix: "/v1" })
     }
 
     return { ok: true, data: await summarize(ctx.userId) };
+  })
+  .get("/resume-builder/snapshot", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const snapshot = await vaultBackendRepository.loadSnapshot(ctx.userId);
+      return { ok: true, data: snapshot };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to load resume builder snapshot");
+    }
+  })
+  .post("/resume-builder/skills", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const parsed = resumeBuilderCreateSkillInputSchema.parse(ctx.body);
+      const created = await vaultBackendRepository.createSkill(ctx.userId, parsed);
+      ctx.set.status = 201;
+      return { ok: true, data: created };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to create resume builder skill");
+    }
+  })
+  .post("/resume-builder/projects", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const parsed = newProjectDraftSchema.parse(ctx.body);
+      const created = await vaultBackendRepository.createProject(
+        ctx.userId,
+        parsed,
+      );
+      ctx.set.status = 201;
+      return { ok: true, data: created };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to create resume builder project");
+    }
+  })
+  .post("/resume-builder/analyze-jd", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const parsed = analyzeJobDescriptionRequestSchema.parse(ctx.body);
+      const analysis = await resumeAnalysisService.analyzeJobDescription(parsed);
+
+      return { ok: true, data: analysis };
+    } catch (error) {
+      ctx.set.status = error instanceof z.ZodError ? 400 : 500;
+      return formatError(error, "Unable to analyze job description");
+    }
+  })
+  .post("/resume-builder/resumes", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const parsed = upsertSavedResumeBodySchema.parse(ctx.body);
+      const created = await vaultBackendRepository.saveResume(ctx.userId, parsed);
+      ctx.set.status = 201;
+      return { ok: true, data: created };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to create resume builder resume");
+    }
+  })
+  .put("/resume-builder/resumes/:resumeId", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const { resumeId } = resumeIdParamSchema.parse(ctx.params);
+      const existingResume = await vaultBackendRepository.getSavedResumeById(
+        ctx.userId,
+        resumeId,
+      );
+
+      if (!existingResume) {
+        ctx.set.status = 404;
+        return notFoundError("Resume builder resume");
+      }
+
+      const parsed = upsertSavedResumeBodySchema.parse(ctx.body);
+      const updated = await vaultBackendRepository.saveResume(ctx.userId, {
+        ...parsed,
+        resumeId,
+      });
+
+      return { ok: true, data: updated };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to update resume builder resume");
+    }
+  })
+  .post("/resume-builder/resumes/:resumeId/duplicate", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const { resumeId } = resumeIdParamSchema.parse(ctx.params);
+      const parsed = duplicateResumeBodySchema.parse(ctx.body);
+      const duplicatedResume = await vaultBackendRepository.duplicateResume(
+        ctx.userId,
+        resumeId,
+        parsed.duplicatedAt.trim(),
+      );
+
+      if (!duplicatedResume) {
+        ctx.set.status = 404;
+        return notFoundError("Resume builder resume");
+      }
+
+      ctx.set.status = 201;
+      return { ok: true, data: duplicatedResume };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to duplicate resume builder resume");
+    }
+  })
+  .delete("/resume-builder/resumes/:resumeId", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const { resumeId } = resumeIdParamSchema.parse(ctx.params);
+      const deleted = await vaultBackendRepository.deleteResume(
+        ctx.userId,
+        resumeId,
+      );
+
+      if (!deleted) {
+        ctx.set.status = 404;
+        return notFoundError("Resume builder resume");
+      }
+
+      return { ok: true };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to delete resume builder resume");
+    }
+  })
+  .patch("/resume-builder/resumes/:resumeId/status", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const { resumeId } = resumeIdParamSchema.parse(ctx.params);
+      const parsed = updateResumeStatusBodySchema.parse(ctx.body);
+      const updated = await vaultBackendRepository.updateResumeStatus(
+        ctx.userId,
+        resumeId,
+        parsed.status,
+      );
+
+      if (!updated) {
+        ctx.set.status = 404;
+        return notFoundError("Resume builder resume");
+      }
+
+      return { ok: true, data: updated };
+    } catch (error) {
+      ctx.set.status = 400;
+      return formatError(error, "Unable to update resume builder status");
+    }
+  })
+  .get("/resume-builder/resumes/:resumeId/export", async (ctx) => {
+    if (!ctx.userId) {
+      ctx.set.status = 401;
+      return unauthorizedError;
+    }
+
+    try {
+      const { resumeId } = resumeIdParamSchema.parse(ctx.params);
+      const savedResume = await vaultBackendRepository.getSavedResumeById(
+        ctx.userId,
+        resumeId,
+      );
+
+      if (!savedResume) {
+        ctx.set.status = 404;
+        return notFoundError("Resume builder resume");
+      }
+
+      const vault = await vaultBackendRepository.loadVaultData(ctx.userId);
+      const exportPayload = mapResumeBuilderExportPayload(savedResume, vault);
+      const pdfBytes = await renderResumeBuilderPdf(exportPayload);
+
+      return new Response(pdfBytes, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${exportPayload.fileName}.pdf"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (error) {
+      ctx.set.status = error instanceof z.ZodError ? 400 : 500;
+      return formatError(error, "Unable to export resume builder PDF");
+    }
   })
   .get("/skills", async (ctx) => {
     if (!ctx.userId) {
