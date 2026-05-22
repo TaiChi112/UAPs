@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  userId      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("user_id")
+  name        String       @db.VarChar(255)
+  email       String       @unique @db.VarChar(255)
+  githubUrl   String?      @db.VarChar(255) @map("github_url")
+  githubId    String?      @unique @db.VarChar(255) @map("github_id")
+  githubLogin String?      @db.VarChar(255) @map("github_login")
+  avatarUrl   String?      @db.Text @map("avatar_url")
+  createdAt   DateTime     @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt   DateTime     @default(now()) @db.Timestamp(6) @map("updated_at")
+  projects    Project[]
+  experiences Experience[]
+  certificates Certificate[]
+  awards      Award[]
+  resumes     Resume[]
+  userSkills  UserSkill[]
+
+  @@map("users")
+}
+
+model Skill {
+  skillId           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("skill_id")
+  name              String            @unique @db.VarChar(100)
+  category          String            @db.VarChar(100)
+  userSkills        UserSkill[]
+  projectSkills     ProjectSkill[]
+  experienceSkills  ExperienceSkill[]
+  resumeSkills      ResumeSkill[]
+
+  @@map("skills")
+}
+
+model Project {
+  projectId       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("project_id")
+  userId          String          @db.Uuid @map("user_id")
+  title           String          @db.VarChar(255)
+  description     String?         @db.Text
+  repoUrl         String?         @db.VarChar(255) @map("repo_url")
+  isActive        Boolean         @default(true) @map("is_active")
+  status          String          @default("Completed") @db.VarChar(50)
+  createdAt       DateTime        @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt       DateTime        @default(now()) @db.Timestamp(6) @map("updated_at")
+  user            User            @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  projectSkills   ProjectSkill[]
+  resumeProjects  ResumeProject[]
+
+  @@index([userId], map: "idx_projects_user_id")
+  @@map("projects")
+}
+
+model Experience {
+  experienceId      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("experience_id")
+  userId            String             @db.Uuid @map("user_id")
+  organization      String             @db.VarChar(255)
+  role              String             @db.VarChar(255)
+  description       String?            @db.Text
+  achievement       String?            @db.Text
+  startDate         DateTime?          @db.Date @map("start_date")
+  endDate           DateTime?          @db.Date @map("end_date")
+  createdAt         DateTime           @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt         DateTime           @default(now()) @db.Timestamp(6) @map("updated_at")
+  user              User               @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  experienceSkills  ExperienceSkill[]
+  resumeExperiences ResumeExperience[]
+
+  @@index([userId], map: "idx_experiences_user_id")
+  @@map("experiences")
+}
+
+model Resume {
+  resumeId           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("resume_id")
+  userId             String             @db.Uuid @map("user_id")
+  versionName        String             @db.VarChar(255) @map("version_name")
+  targetJobTitle     String?            @db.VarChar(255) @map("target_job_title")
+  targetCompany      String?            @db.VarChar(255) @map("target_company")
+  visibility         String             @default("private") @db.VarChar(20)
+  profileSummary     String?            @db.Text @map("profile_summary")
+  location           String?            @db.VarChar(255)
+  phone              String?            @db.VarChar(50)
+  linkedinUrl        String?            @db.VarChar(255) @map("linkedin_url")
+  portfolioUrl       String?            @db.VarChar(255) @map("portfolio_url")
+  isActive           Boolean            @default(false) @map("is_active")
+  status             String             @default("Draft") @db.VarChar(50)
+  createdAt          DateTime           @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt          DateTime           @default(now()) @db.Timestamp(6) @map("updated_at")
+  user               User               @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  resumeBasic        ResumeBasic?
+  resumeProjects     ResumeProject[]
+  resumeSkills       ResumeSkill[]
+  resumeExperiences  ResumeExperience[]
+  resumeCertificates ResumeCertificate[]
+  resumeAwards       ResumeAward[]
+
+  @@index([userId], map: "idx_resumes_user_id")
+  @@index([visibility], map: "idx_resumes_visibility")
+  @@index([targetJobTitle, status], map: "idx_resumes_target_job_status")
+  @@map("resumes")
+}
+
+model Certificate {
+  certificateId       String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("certificate_id")
+  userId              String              @db.Uuid @map("user_id")
+  name                String              @db.VarChar(255)
+  year                String              @db.VarChar(20)
+  createdAt           DateTime            @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt           DateTime            @default(now()) @db.Timestamp(6) @map("updated_at")
+  user                User                @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  resumeCertificates  ResumeCertificate[]
+
+  @@index([userId], map: "idx_certificates_user_id")
+  @@map("certificates")
+}
+
+model Award {
+  awardId        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("award_id")
+  userId         String        @db.Uuid @map("user_id")
+  name           String        @db.VarChar(255)
+  description    String        @db.Text @map("description")
+  createdAt      DateTime      @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt      DateTime      @default(now()) @db.Timestamp(6) @map("updated_at")
+  user           User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  resumeAwards   ResumeAward[]
+
+  @@index([userId], map: "idx_awards_user_id")
+  @@map("awards")
+}
+
+model ResumeBasic {
+  resumeId      String   @id @db.Uuid @map("resume_id")
+  fullName      String   @db.VarChar(255) @map("full_name")
+  headline      String?  @db.VarChar(255)
+  email         String?  @db.VarChar(255)
+  phone         String?  @db.VarChar(50)
+  location      String?  @db.VarChar(255)
+  linkedinUrl   String?  @db.VarChar(255) @map("linkedin_url")
+  portfolioUrl  String?  @db.VarChar(255) @map("portfolio_url")
+  githubUrl     String?  @db.VarChar(255) @map("github_url")
+  summary       String?  @db.Text
+  createdAt     DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt     DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+  resume        Resume   @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+
+  @@map("resume_basics")
+}
+
+model UserSkill {
+  userId           String  @db.Uuid @map("user_id")
+  skillId          String  @db.Uuid @map("skill_id")
+  proficiencyLevel String  @default("Intermediate") @db.VarChar(50) @map("proficiency_level")
+  user             User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  skill            Skill   @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@map("user_skills")
+}
+
+model ProjectSkill {
+  projectId String  @db.Uuid @map("project_id")
+  skillId   String  @db.Uuid @map("skill_id")
+  project   Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+  @@map("project_skills")
+}
+
+model ExperienceSkill {
+  experienceId String     @db.Uuid @map("experience_id")
+  skillId      String     @db.Uuid @map("skill_id")
+  experience   Experience @relation(fields: [experienceId], references: [experienceId], onDelete: Cascade)
+  skill        Skill      @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([experienceId, skillId])
+  @@map("experience_skills")
+}
+
+model ResumeProject {
+  resumeId  String  @db.Uuid @map("resume_id")
+  projectId String  @db.Uuid @map("project_id")
+  resume    Resume  @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
+
+  @@id([resumeId, projectId])
+  @@map("resume_projects")
+}
+
+model ResumeSkill {
+  resumeId String @db.Uuid @map("resume_id")
+  skillId  String @db.Uuid @map("skill_id")
+  resume   Resume @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+  skill    Skill  @relation(fields: [skillId], references: [skillId], onDelete: Cascade)
+
+  @@id([resumeId, skillId])
+  @@map("resume_skills")
+}
+
+model ResumeExperience {
+  resumeId     String     @db.Uuid @map("resume_id")
+  experienceId String     @db.Uuid @map("experience_id")
+  resume       Resume     @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+  experience   Experience @relation(fields: [experienceId], references: [experienceId], onDelete: Cascade)
+
+  @@id([resumeId, experienceId])
+  @@map("resume_experiences")
+}
+
+model ResumeCertificate {
+  resumeId       String       @db.Uuid @map("resume_id")
+  certificateId  String       @db.Uuid @map("certificate_id")
+  resume         Resume       @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+  certificate    Certificate  @relation(fields: [certificateId], references: [certificateId], onDelete: Cascade)
+
+  @@id([resumeId, certificateId])
+  @@map("resume_certificates")
+}
+
+model ResumeAward {
+  resumeId  String  @db.Uuid @map("resume_id")
+  awardId   String  @db.Uuid @map("award_id")
+  resume    Resume  @relation(fields: [resumeId], references: [resumeId], onDelete: Cascade)
+  award     Award   @relation(fields: [awardId], references: [awardId], onDelete: Cascade)
+
+  @@id([resumeId, awardId])
+  @@map("resume_awards")
+}
