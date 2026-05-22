@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
-import RoleSwitchNav from "@/components/role-switch-nav";
 import "./globals.css";
 
 const primaryFont = Space_Grotesk({
@@ -15,8 +14,8 @@ const monoFont = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UAPS MVP",
-  description: "Universal Academic Portfolio System MVP",
+  title: "UAPS",
+  description: "Universal Academic Portfolio System",
 };
 
 export const dynamic = "force-dynamic";
