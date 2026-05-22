@@ -48,7 +48,7 @@ const createFallbackRepository = (): VaultRepository => ({
 });
 
 describe("HybridVaultRepository", () => {
-  it("merges API collections into the fallback snapshot while preserving fallback resumes", async () => {
+  it("keeps API-backed resumes and supported collections authoritative while preserving fallback-only unsupported fields", async () => {
     const fallbackRepository = createFallbackRepository();
     const apiRepository: VaultRepository = {
       ...createFallbackRepository(),
@@ -93,13 +93,17 @@ describe("HybridVaultRepository", () => {
     const snapshot = await repository.loadSnapshot();
 
     expect(snapshot.source).toBe("hybrid");
-    expect(snapshot.savedResumes).toEqual(INITIAL_SAVED_RESUMES);
+    expect(snapshot.savedResumes).toEqual([]);
     expect(snapshot.vault.skills.some((skill) => skill.name === "Kubernetes")).toBe(
       true,
     );
     expect(
+      snapshot.vault.skills.some((skill) => skill.name === "Python"),
+    ).toBe(false);
+    expect(
       snapshot.vault.projects.some((project) => project.title === "Realtime Platform"),
     ).toBe(true);
+    expect(snapshot.vault.certificates).toEqual(INITIAL_VAULT_DATA.certificates);
   });
 
   it("falls back cleanly when the API repository throws during a supported mutation", async () => {
