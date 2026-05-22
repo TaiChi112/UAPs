@@ -1,14 +1,24 @@
 import { jwtVerify, SignJWT } from "jose";
 
+import { prisma } from "./db/prisma";
+
 const textEncoder = new TextEncoder();
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "change-this-secret-in-production";
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? "uaps_session";
 const webAppUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
+const SINGLE_PLAYER_MODE =
+  process.env.SINGLE_PLAYER_MODE === "true" ||
+  (process.env.SINGLE_PLAYER_MODE !== "false" &&
+    process.env.NODE_ENV !== "production");
 
 const jwtSecret = textEncoder.encode(JWT_SECRET);
 
-type SessionPayload = {
+declare global {
+  var __uapsLocalDevSession__: SessionPayload | undefined;
+}
+
+export type SessionPayload = {
   sub: string;
   email: string;
   name: string;
@@ -21,8 +31,18 @@ type StatePayload = {
   returnTo?: string;
 };
 
+const LOCAL_DEV_USER = {
+  email: "maya.chen.demo@uaps.local",
+  name: "Maya Chen",
+  githubId: "demo-maya-chen-001",
+  githubLogin: "maya-chen-demo",
+  githubUrl: "https://github.com/maya-chen-demo",
+  avatarUrl: "https://avatars.githubusercontent.com/u/1001001?v=4",
+} as const;
+
 export const getWebAppUrl = () => webAppUrl;
 export const getSessionCookieName = () => SESSION_COOKIE_NAME;
+export const isSinglePlayerMode = () => SINGLE_PLAYER_MODE;
 
 export const parseCookies = (cookieHeader?: string) => {
   if (!cookieHeader) {
@@ -60,6 +80,51 @@ export const verifySessionToken = async (token?: string) => {
   } catch {
     return null;
   }
+};
+
+export const getLocalDevSession = async (): Promise<SessionPayload> => {
+  if (!SINGLE_PLAYER_MODE) {
+    throw new Error("Single-player mode is disabled");
+  }
+
+  if (globalThis.__uapsLocalDevSession__) {
+    return globalThis.__uapsLocalDevSession__;
+  }
+
+  const user = await prisma.user.upsert({
+    where: {
+      email: LOCAL_DEV_USER.email,
+    },
+    update: {
+      name: LOCAL_DEV_USER.name,
+      githubId: LOCAL_DEV_USER.githubId,
+      githubLogin: LOCAL_DEV_USER.githubLogin,
+      githubUrl: LOCAL_DEV_USER.githubUrl,
+      avatarUrl: LOCAL_DEV_USER.avatarUrl,
+    },
+    create: {
+      email: LOCAL_DEV_USER.email,
+      name: LOCAL_DEV_USER.name,
+      githubId: LOCAL_DEV_USER.githubId,
+      githubLogin: LOCAL_DEV_USER.githubLogin,
+      githubUrl: LOCAL_DEV_USER.githubUrl,
+      avatarUrl: LOCAL_DEV_USER.avatarUrl,
+    },
+  });
+
+  const session: SessionPayload = {
+    sub: user.userId,
+    email: user.email,
+    name: user.name,
+    githubId: user.githubId ?? LOCAL_DEV_USER.githubId,
+    githubLogin: user.githubLogin ?? LOCAL_DEV_USER.githubLogin,
+  };
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__uapsLocalDevSession__ = session;
+  }
+
+  return session;
 };
 
 export const createOauthState = async (payload: StatePayload) => {
