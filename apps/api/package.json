@@ -5,19 +5,36 @@
   "scripts": {
     "dev": "bun --hot index.ts",
     "start": "bun index.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "bun run prisma:generate && bun build ./index.ts --target bun --packages external --outdir ./dist",
+    "seed:vault-test": "bun run scripts/seed-vault-test.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prisma:format": "prisma format --config prisma.config.ts",
+    "prisma:generate": "prisma generate --config prisma.config.ts",
+    "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
+    "prisma:studio": "prisma studio --config prisma.config.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/pg": "^8.15.6",
+    "prisma": "7.8.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.79",
     "@elysiajs/cors": "^1.4.1",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
     "@resvg/resvg-js": "^2.6.2",
+    "@types/pdfkit": "^0.17.6",
+    "@uaps/shared": "workspace:*",
+    "ai": "^6.0.190",
+    "dotenv": "^17.2.3",
     "elysia": "^1.4.28",
     "jose": "^6.1.0",
     "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "zod": "^4.3.6"
   }

@@ -10,9 +10,16 @@
     "dev": "concurrently -k \"bun run dev:api\" \"bun run dev:web\"",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:api": "bun run --cwd apps/api dev",
+    "build": "bun run build:api && bun run build:web",
+    "build:api": "bun run --cwd apps/api build",
     "build:web": "bun run --cwd apps/web build",
     "start:web": "bun run --cwd apps/web start",
+    "test": "bun run test:api && bun run test:web",
+    "test:api": "bun run --cwd apps/api test",
+    "test:web": "bun run --cwd apps/web test",
+    "typecheck": "bun run typecheck:api && bun run typecheck:web",
     "typecheck:api": "bun run --cwd apps/api typecheck",
+    "typecheck:web": "bun run --cwd apps/web typecheck",
     "lint:web": "bun run --cwd apps/web lint"
   },
   "devDependencies": {
