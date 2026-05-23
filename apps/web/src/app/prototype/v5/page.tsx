@@ -126,6 +126,8 @@ const INITIAL_RESUMES = [
   },
 ];
 
+type ResumeConfig = typeof EMPTY_CONFIG;
+
 const EMPTY_CONFIG = {
   targetRole: "",
   targetCompany: "",
@@ -146,7 +148,7 @@ const ResumeDocument = ({
   config,
   db,
 }: {
-  config: any;
+  config: ResumeConfig;
   db: typeof INITIAL_DB;
 }) => {
   const previewData = {
@@ -183,7 +185,7 @@ const ResumeDocument = ({
 
         {config.summary && (
           <p className="mt-4 text-slate-700 text-sm leading-relaxed max-w-2xl mx-auto italic">
-            "{config.summary}"
+            &quot;{config.summary}&quot;
           </p>
         )}
       </div>
@@ -323,7 +325,7 @@ export default function ResumeApp() {
     role: "",
     description: "",
   });
-  const [previewModal, setPreviewModal] = useState<any | null>(null);
+  const [previewModal, setPreviewModal] = useState<(typeof INITIAL_RESUMES)[0] | null>(null);
 
   // Auto-hide toast
   useEffect(() => {
@@ -1153,7 +1155,7 @@ export default function ResumeApp() {
                         Requirements
                       </h4>
                       <p className="text-xs text-amber-700 mb-3">
-                        The JD asked for these, but they aren't in your vault.
+                        The JD asked for these, but they aren&apos;t in your vault.
                         Have you used them?
                       </p>
                       <div className="space-y-2">

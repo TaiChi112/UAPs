@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 
 import type {
+  AwardId,
   CertificateId,
   ExperienceId,
   NewProjectDraft,
@@ -39,6 +40,7 @@ export interface ManualBuilderViewProps {
   onAddProject: (event: FormEvent<HTMLFormElement>) => void;
   onToggleExperience: (experienceId: ExperienceId) => void;
   onToggleCert: (certificateId: CertificateId) => void;
+  onToggleAward: (awardId: AwardId) => void;
 }
 
 export function ManualBuilderView({
@@ -63,6 +65,7 @@ export function ManualBuilderView({
   onAddProject,
   onToggleExperience,
   onToggleCert,
+  onToggleAward,
 }: ManualBuilderViewProps) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 p-4 md:p-6 font-sans">
@@ -106,10 +109,13 @@ export function ManualBuilderView({
             <ExperienceCertificatesSection
               experience={db.experience}
               certificates={db.certificates}
+              awards={db.awards}
               selectedExperienceIds={config.selectedExperience}
               selectedCertIds={config.selectedCerts}
+              selectedAwardIds={config.selectedAwards}
               onToggleExperience={onToggleExperience}
               onToggleCert={onToggleCert}
+              onToggleAward={onToggleAward}
             />
           </div>
         </div>
