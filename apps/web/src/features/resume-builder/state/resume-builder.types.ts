@@ -86,6 +86,7 @@ export type ResumeBuilderAction =
   | { type: "ai/reset" }
   | { type: "ai/setJobDescription"; payload: { value: string } }
   | { type: "ai/startAnalysis" }
+  | { type: "ai/failAnalysis" }
   | {
       type: "ai/completeAnalysis";
       payload: { suggestedConfig: ResumeConfig; feedback: AiFeedback };
