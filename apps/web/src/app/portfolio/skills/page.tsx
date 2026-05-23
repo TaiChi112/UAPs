@@ -33,7 +33,9 @@ export default function SkillPortfolioPage() {
   };
 
   useEffect(() => {
-    void load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
