@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ChangeEvent, MouseEvent } from "react";
 
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ export default function ResumeBuilderDashboardPage() {
   const router = useRouter();
   const { state, dispatch } = useResumeBuilder();
   const actions = useResumeBuilderActions();
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const previewResume =
     state.ui.previewModal.kind === "open" ? state.ui.previewModal.resume : null;
@@ -102,12 +104,45 @@ export default function ResumeBuilderDashboardPage() {
     await actions.updateResumeStatus(resumeId, nextStatus);
   };
 
+  const handleDownloadPdf = async () => {
+    if (!previewResume || isDownloadingPdf) {
+      return;
+    }
+
+    dispatch({
+      type: "ui/showToast",
+      payload: { message: "Downloading PDF..." },
+    });
+    setIsDownloadingPdf(true);
+
+    try {
+      await actions.downloadResumePdf(previewResume.id);
+      dispatch({
+        type: "ui/showToast",
+        payload: { message: "PDF downloaded." },
+      });
+    } catch (error) {
+      dispatch({
+        type: "ui/showToast",
+        payload: {
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unable to download the resume PDF.",
+        },
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   return (
     <DashboardView
       toastMessage={state.ui.toastMessage}
       resumes={state.savedResumes}
       db={state.db}
       previewResume={previewResume}
+      isDownloadingPdf={isDownloadingPdf}
       statusColors={statusColors}
       onCreateManual={handleCreateManual}
       onCreateAi={handleCreateAi}
@@ -119,12 +154,7 @@ export default function ResumeBuilderDashboardPage() {
       onEdit={handleEdit}
       onDuplicate={handleDuplicate}
       onDelete={handleDelete}
-      onDownloadPdf={() =>
-        dispatch({
-          type: "ui/showToast",
-          payload: { message: "Downloading PDF..." },
-        })
-      }
+      onDownloadPdf={handleDownloadPdf}
     />
   );
 }
