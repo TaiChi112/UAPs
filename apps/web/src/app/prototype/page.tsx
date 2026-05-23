@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Briefcase, User, Code, FileText, Award, CheckCircle } from 'lucide-react';
+import { Briefcase, Code, FileText, Award, CheckCircle } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // 1. Centralized Data Mock (คลังข้อมูลส่วนตัวทั้งหมด)
@@ -176,8 +176,8 @@ const RESUME_VARIANTS = [
 ];
 
 // Helper function to filter arrays based on IDs
-const getItemsByIds = (sourceArray: any[], ids: string[]) => {
-  return sourceArray.filter(item => ids.includes(item.id));
+const getItemsByIds = <T extends { id: string }>(sourceArray: T[], ids: string[]) => {
+  return sourceArray.filter((item) => ids.includes(item.id));
 };
 
 export default function ResumePrototype() {
@@ -271,7 +271,7 @@ export default function ResumePrototype() {
                     <span>{generatedResume.basicInfo.github}</span>
                   </div>
                   <p className="mt-4 text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100 italic">
-                    "{generatedResume.basicInfo.summary}"
+                    &quot;{generatedResume.basicInfo.summary}&quot;
                   </p>
                 </header>
 
