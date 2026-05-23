@@ -19,6 +19,7 @@ export interface DashboardViewProps {
   resumes: SavedResume[];
   db: VaultData;
   previewResume: SavedResume | null;
+  isDownloadingPdf: boolean;
   statusColors: Record<FeatureResumeStatus, string>;
   onCreateManual: () => void;
   onCreateAi: () => void;
@@ -46,6 +47,7 @@ export function DashboardView({
   resumes,
   db,
   previewResume,
+  isDownloadingPdf,
   statusColors,
   onCreateManual,
   onCreateAi,
@@ -58,13 +60,13 @@ export function DashboardView({
   onDownloadPdf,
 }: DashboardViewProps) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 p-6 md:p-10 font-sans relative">
+    <div className="bg-slate-50 text-slate-800 p-4 md:p-6 font-sans relative">
       {toastMessage && <ToastBanner message={toastMessage} />}
 
       <div className="max-w-6xl mx-auto">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold flex items-center gap-3 text-slate-900 mb-6">
-            <LayoutDashboard className="w-8 h-8 text-blue-600" /> My Vault &
+        <div className="mb-6">
+          <h1 className="mb-4 flex items-center gap-3 text-2xl font-bold text-slate-900 md:text-3xl">
+            <LayoutDashboard className="h-7 w-7 text-blue-600" /> My Vault &
             Resumes
           </h1>
 
@@ -74,7 +76,7 @@ export function DashboardView({
           />
         </div>
 
-        <h2 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">
+        <h2 className="mb-4 border-b pb-2 text-lg font-bold text-slate-800">
           Saved Resumes
         </h2>
         <SavedResumesGrid
@@ -92,6 +94,7 @@ export function DashboardView({
         <ResumePreviewModal
           resume={previewResume}
           db={db}
+          isDownloadingPdf={isDownloadingPdf}
           onClose={onClosePreview}
           onEdit={onEdit}
           onDownloadPdf={onDownloadPdf}
