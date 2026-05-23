@@ -121,6 +121,8 @@ const INITIAL_RESUMES = [
   },
 ];
 
+type ResumeConfig = typeof EMPTY_CONFIG;
+
 const EMPTY_CONFIG = {
   targetRole: "",
   targetCompany: "",
@@ -137,7 +139,7 @@ const ResumeDocument = ({
   config,
   db,
 }: {
-  config: any;
+  config: ResumeConfig;
   db: typeof INITIAL_DB;
 }) => {
   // กรองข้อมูลตามที่ถูก Select
@@ -175,7 +177,7 @@ const ResumeDocument = ({
 
         {config.summary && (
           <p className="mt-4 text-slate-700 text-sm leading-relaxed max-w-2xl mx-auto italic">
-            "{config.summary}"
+            &quot;{config.summary}&quot;
           </p>
         )}
       </div>
@@ -303,7 +305,7 @@ export default function ResumeBuilder() {
   });
 
   // Modal & Toast States
-  const [previewResume, setPreviewResume] = useState<any | null>(null);
+  const [previewResume, setPreviewResume] = useState<(typeof INITIAL_RESUMES)[0] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Auto-hide toast

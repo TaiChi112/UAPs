@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Briefcase, Code, FileText, Award, CheckCircle, Plus, X, User, Check, Building, LayoutDashboard, ArrowLeft, Save, Calendar } from 'lucide-react';
+import { Briefcase, Code, FileText, CheckCircle, Plus, X, User, Check, Building, LayoutDashboard, ArrowLeft, Save, Calendar } from 'lucide-react';
 
 // 1. Initial Mock Database (ข้อมูลตั้งต้นในคลัง)
 const INITIAL_DB = {
