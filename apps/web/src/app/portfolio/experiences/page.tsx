@@ -39,13 +39,19 @@ export default function ExperiencePortfolioPage() {
   const [editForm, setEditForm] = useState<ExperienceFormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
 
-  const skillMap = useMemo(() => new Map(skills.map((skill) => [skill.skillId, skill.name])), [skills]);
+  const skillMap = useMemo(
+    () => new Map(skills.map((skill) => [skill.skillId, skill.name])),
+    [skills],
+  );
 
   const load = async () => {
     setError(null);
 
     try {
-      const [experienceData, skillData] = await Promise.all([getExperiences(), getSkills()]);
+      const [experienceData, skillData] = await Promise.all([
+        getExperiences(),
+        getSkills(),
+      ]);
       setExperiences(experienceData);
       setSkills(skillData);
     } catch {
@@ -54,7 +60,9 @@ export default function ExperiencePortfolioPage() {
   };
 
   useEffect(() => {
-    void load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const toggleSkill = (target: "create" | "edit", skillId: string) => {
@@ -123,7 +131,9 @@ export default function ExperiencePortfolioPage() {
       <div>
         <p className="eyebrow">Portfolio</p>
         <h2 className="section-title">Experiences CRUD</h2>
-        <p className="subtle">Track experience entries and map relevant skills.</p>
+        <p className="subtle">
+          Track experience entries and map relevant skills.
+        </p>
       </div>
 
       {error ? <article className="card error-text">{error}</article> : null}
@@ -134,40 +144,67 @@ export default function ExperiencePortfolioPage() {
           className="input"
           placeholder="Organization"
           value={createForm.organization}
-          onChange={(event) => setCreateForm((state) => ({ ...state, organization: event.target.value }))}
+          onChange={(event) =>
+            setCreateForm((state) => ({
+              ...state,
+              organization: event.target.value,
+            }))
+          }
           required
         />
         <input
           className="input"
           placeholder="Role"
           value={createForm.role}
-          onChange={(event) => setCreateForm((state) => ({ ...state, role: event.target.value }))}
+          onChange={(event) =>
+            setCreateForm((state) => ({ ...state, role: event.target.value }))
+          }
           required
         />
         <textarea
           className="textarea"
           placeholder="Description"
           value={createForm.description}
-          onChange={(event) => setCreateForm((state) => ({ ...state, description: event.target.value }))}
+          onChange={(event) =>
+            setCreateForm((state) => ({
+              ...state,
+              description: event.target.value,
+            }))
+          }
         />
         <textarea
           className="textarea"
           placeholder="Achievement"
           value={createForm.achievement}
-          onChange={(event) => setCreateForm((state) => ({ ...state, achievement: event.target.value }))}
+          onChange={(event) =>
+            setCreateForm((state) => ({
+              ...state,
+              achievement: event.target.value,
+            }))
+          }
         />
         <div className="inline-list">
           <input
             className="input"
             type="date"
             value={createForm.startDate}
-            onChange={(event) => setCreateForm((state) => ({ ...state, startDate: event.target.value }))}
+            onChange={(event) =>
+              setCreateForm((state) => ({
+                ...state,
+                startDate: event.target.value,
+              }))
+            }
           />
           <input
             className="input"
             type="date"
             value={createForm.endDate}
-            onChange={(event) => setCreateForm((state) => ({ ...state, endDate: event.target.value }))}
+            onChange={(event) =>
+              setCreateForm((state) => ({
+                ...state,
+                endDate: event.target.value,
+              }))
+            }
           />
         </div>
 
@@ -199,35 +236,65 @@ export default function ExperiencePortfolioPage() {
                 <input
                   className="input"
                   value={editForm.organization}
-                  onChange={(event) => setEditForm((state) => ({ ...state, organization: event.target.value }))}
+                  onChange={(event) =>
+                    setEditForm((state) => ({
+                      ...state,
+                      organization: event.target.value,
+                    }))
+                  }
                 />
                 <input
                   className="input"
                   value={editForm.role}
-                  onChange={(event) => setEditForm((state) => ({ ...state, role: event.target.value }))}
+                  onChange={(event) =>
+                    setEditForm((state) => ({
+                      ...state,
+                      role: event.target.value,
+                    }))
+                  }
                 />
                 <textarea
                   className="textarea"
                   value={editForm.description}
-                  onChange={(event) => setEditForm((state) => ({ ...state, description: event.target.value }))}
+                  onChange={(event) =>
+                    setEditForm((state) => ({
+                      ...state,
+                      description: event.target.value,
+                    }))
+                  }
                 />
                 <textarea
                   className="textarea"
                   value={editForm.achievement}
-                  onChange={(event) => setEditForm((state) => ({ ...state, achievement: event.target.value }))}
+                  onChange={(event) =>
+                    setEditForm((state) => ({
+                      ...state,
+                      achievement: event.target.value,
+                    }))
+                  }
                 />
                 <div className="inline-list">
                   <input
                     className="input"
                     type="date"
                     value={editForm.startDate}
-                    onChange={(event) => setEditForm((state) => ({ ...state, startDate: event.target.value }))}
+                    onChange={(event) =>
+                      setEditForm((state) => ({
+                        ...state,
+                        startDate: event.target.value,
+                      }))
+                    }
                   />
                   <input
                     className="input"
                     type="date"
                     value={editForm.endDate}
-                    onChange={(event) => setEditForm((state) => ({ ...state, endDate: event.target.value }))}
+                    onChange={(event) =>
+                      setEditForm((state) => ({
+                        ...state,
+                        endDate: event.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="chip-grid">
@@ -243,10 +310,18 @@ export default function ExperiencePortfolioPage() {
                   ))}
                 </div>
                 <div className="inline-list">
-                  <button className="btn-primary" type="button" onClick={() => void handleSave(experience.experienceId)}>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => void handleSave(experience.experienceId)}
+                  >
                     Save
                   </button>
-                  <button className="btn-secondary" type="button" onClick={() => setEditingId(null)}>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => setEditingId(null)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -255,13 +330,28 @@ export default function ExperiencePortfolioPage() {
               <>
                 <h4>{experience.role}</h4>
                 <p>{experience.organization}</p>
-                <p className="subtle">{experience.description ?? "No description"}</p>
-                <p className="subtle">Skills: {experience.skillIds.map((id) => skillMap.get(id) ?? id).join(", ") || "-"}</p>
+                <p className="subtle">
+                  {experience.description ?? "No description"}
+                </p>
+                <p className="subtle">
+                  Skills:{" "}
+                  {experience.skillIds
+                    .map((id) => skillMap.get(id) ?? id)
+                    .join(", ") || "-"}
+                </p>
                 <div className="inline-list">
-                  <button className="btn-secondary" type="button" onClick={() => beginEdit(experience)}>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => beginEdit(experience)}
+                  >
                     Edit
                   </button>
-                  <button className="btn-secondary" type="button" onClick={() => void handleDelete(experience.experienceId)}>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => void handleDelete(experience.experienceId)}
+                  >
                     Delete
                   </button>
                 </div>
