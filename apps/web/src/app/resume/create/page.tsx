@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   composeResume,
   Experience,
@@ -61,7 +61,7 @@ export default function CreateResumePage() {
     [resumes, selectedResumeId],
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setError(null);
 
     try {
@@ -83,26 +83,31 @@ export default function CreateResumePage() {
     } catch {
       setError("Failed to load compose data.");
     }
-  };
+  }, [selectedResumeId]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    (async () => {
+      await load();
+    })();
+  }, [load]);
 
   useEffect(() => {
-    if (!selectedResume) {
-      setComposeState(emptyCompose);
-      setPreview(null);
-      return;
-    }
+    (async () => {
+      // allow effect to yield before calling setState
+      await Promise.resolve();
 
-    setComposeState({
-      projectIds: selectedResume.projectIds,
-      skillIds: selectedResume.skillIds,
-      experienceIds: selectedResume.experienceIds,
-    });
+      if (!selectedResume) {
+        setComposeState(emptyCompose);
+        setPreview(null);
+        return;
+      }
 
-    void (async () => {
+      setComposeState({
+        projectIds: selectedResume.projectIds,
+        skillIds: selectedResume.skillIds,
+        experienceIds: selectedResume.experienceIds,
+      });
+
       const [data, baselineData] = await Promise.all([
         getResumePreview(selectedResume.resumeId),
         getResumeBaseline(selectedResume.resumeId),

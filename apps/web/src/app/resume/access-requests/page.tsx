@@ -8,6 +8,7 @@ import {
   ResumeAccessRequest,
   reviewOwnerAccessRequest,
 } from "@/lib/api";
+import { useCallback } from "react";
 
 const requestStatusClass: Record<ResumeAccessRequest["requestStatus"], string> = {
   pending: "pending",
@@ -37,7 +38,7 @@ export default function ResumeAccessRequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setError(null);
 
     try {
@@ -50,11 +51,13 @@ export default function ResumeAccessRequestsPage() {
     } catch {
       setError("Failed to load access request workflow data.");
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
-    void load();
-  }, [statusFilter]);
+    (async () => {
+      await load();
+    })();
+  }, [load]);
 
   const review = async (requestId: string, decision: "approve" | "reject") => {
     const result = await reviewOwnerAccessRequest(requestId, {
