@@ -46,7 +46,7 @@ export function ResumeDocument({ config, db }: ResumeDocumentProps) {
 
         {config.summary && (
           <p className="mt-4 text-slate-700 text-sm leading-relaxed max-w-2xl mx-auto italic">
-            "{config.summary}"
+            &quot;{config.summary}&quot;
           </p>
         )}
       </div>
@@ -136,10 +136,29 @@ export function ResumeDocument({ config, db }: ResumeDocumentProps) {
           </div>
         )}
 
+        {previewData.awards.length > 0 && (
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-1 mb-3">
+              Awards
+            </h3>
+            <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+              {previewData.awards.map((award) => (
+                <li key={award.id}>
+                  <span className="font-medium text-slate-800">
+                    {award.name}
+                  </span>
+                  {award.desc && `: ${award.desc}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {previewData.skills.length === 0 &&
           previewData.projects.length === 0 &&
           previewData.experience.length === 0 &&
-          previewData.certificates.length === 0 && (
+          previewData.certificates.length === 0 &&
+          previewData.awards.length === 0 && (
             <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
               <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p>Your resume is currently empty.</p>
