@@ -7,6 +7,7 @@ import { ResumeDocument } from "../preview/resume-document";
 export interface ResumePreviewModalProps {
   resume: SavedResume;
   db: VaultData;
+  isDownloadingPdf: boolean;
   onClose: () => void;
   onEdit: (resume: SavedResume) => void;
   onDownloadPdf: () => void;
@@ -15,6 +16,7 @@ export interface ResumePreviewModalProps {
 export function ResumePreviewModal({
   resume,
   db,
+  isDownloadingPdf,
   onClose,
   onEdit,
   onDownloadPdf,
@@ -37,9 +39,11 @@ export function ResumePreviewModal({
             </button>
             <button
               onClick={onDownloadPdf}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
+              disabled={isDownloadingPdf}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
             >
-              <FileDown className="w-4 h-4" /> Download PDF
+              <FileDown className="w-4 h-4" />{" "}
+              {isDownloadingPdf ? "Downloading PDF..." : "Download PDF"}
             </button>
             <button
               onClick={onClose}
