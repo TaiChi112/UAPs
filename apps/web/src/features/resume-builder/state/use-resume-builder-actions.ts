@@ -1,9 +1,6 @@
 "use client";
 
 import {
-  asProjectId,
-  asSkillId,
-  type AnalyzeJobDescriptionResult,
   type FeatureResumeStatus,
   type NewProjectDraft,
   type ResumeId,
@@ -13,35 +10,16 @@ import {
 } from "@uaps/shared/resume-builder";
 
 import { getResumeBuilderRepository } from "@/features/resume-builder/services/repositories";
+import { getResumeAnalysisService } from "@/features/resume-builder/services/ai";
+import { ResumeAnalysisRequestError } from "@/features/resume-builder/services/ai/api-resume-analysis.service";
+import { downloadResumeBuilderPdf } from "@/lib/api";
 
 import { useResumeBuilder } from "./use-resume-builder";
 
-const createSuggestedAnalysis = (): AnalyzeJobDescriptionResult => ({
-  suggestedConfig: {
-    targetRole: "Data Engineer (Suggested)",
-    targetCompany: "Tech Corp",
-    summary:
-      "Data Engineer with expertise in Python and AWS, aiming to optimize data pipelines as required in the Job Description.",
-    selectedSkills: [asSkillId("s1"), asSkillId("s5")],
-    selectedProjects: [asProjectId("p2")],
-    selectedExperience: [],
-    selectedCerts: [],
-    selectedAwards: [],
-  },
-  feedback: {
-    matchScore: 65,
-    missingSkills: ["Kubernetes", "Apache Kafka", "Go"],
-  },
-});
-
-const delay = (durationMs: number) =>
-  new Promise<void>((resolve) => {
-    window.setTimeout(resolve, durationMs);
-  });
-
 export function useResumeBuilderActions() {
-  const { dispatch } = useResumeBuilder();
+  const { state, dispatch } = useResumeBuilder();
   const repository = getResumeBuilderRepository();
+  const resumeAnalysisService = getResumeAnalysisService();
 
   return {
     async loadSnapshot() {
@@ -154,20 +132,70 @@ export function useResumeBuilderActions() {
 
     async analyzeJobDescription(jobDescription: string) {
       if (!jobDescription.trim()) {
+        dispatch({
+          type: "ui/showToast",
+          payload: { message: "Please paste a Job Description first." },
+        });
+        return null;
+      }
+
+      if (state.ai.analysisState === "analyzing") {
         return null;
       }
 
       dispatch({ type: "ai/startAnalysis" });
-      await delay(2500);
 
-      const analysis = createSuggestedAnalysis();
+      try {
+        const analysis = await resumeAnalysisService.analyzeJobDescription({
+          jobDescription,
+          vault: state.db,
+          currentConfig: state.editor.resumeConfig,
+        });
 
-      dispatch({
-        type: "ai/completeAnalysis",
-        payload: analysis,
-      });
+        dispatch({
+          type: "ai/completeAnalysis",
+          payload: analysis,
+        });
 
-      return analysis;
+        return analysis;
+      } catch (error) {
+        dispatch({ type: "ai/failAnalysis" });
+        const message =
+          error instanceof ResumeAnalysisRequestError
+            ? error.message
+            : error instanceof Error
+              ? `Analysis failed: ${error.message}`
+              : "Analysis failed. Please try again in a moment.";
+
+        dispatch({
+          type: "ui/showToast",
+          payload: { message },
+        });
+        console.error("Resume analysis failed", error);
+
+        return null;
+      }
+    },
+
+    async downloadResumePdf(resumeId: ResumeId) {
+      const result = await downloadResumeBuilderPdf(String(resumeId));
+
+      if (!result.ok || !result.data) {
+        throw new Error(result.message ?? "Failed to download resume PDF");
+      }
+
+      const objectUrl = window.URL.createObjectURL(result.data.blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = result.data.fileName;
+      anchor.style.display = "none";
+
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(objectUrl);
+
+      return result.data.fileName;
     },
 
     async fixMissingSkill(skillName: string) {
