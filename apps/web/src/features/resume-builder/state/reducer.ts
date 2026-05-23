@@ -366,6 +366,19 @@ export const resumeBuilderReducer = (
         },
       };
 
+    case "ai/failAnalysis":
+      return {
+        ...state,
+        ai: {
+          ...state.ai,
+          analysisState: "idle",
+          feedback: {
+            matchScore: 0,
+            missingSkills: [],
+          },
+        },
+      };
+
     case "ai/completeAnalysis":
       return {
         ...state,
