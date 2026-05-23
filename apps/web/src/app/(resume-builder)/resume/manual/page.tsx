@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect } from "react";
 
 import type {
+  AwardId,
   CertificateId,
   ExperienceId,
   ProjectId,
@@ -132,6 +133,12 @@ export default function ResumeBuilderManualPage() {
         dispatch({
           type: "editor/toggleCertificate",
           payload: { certificateId },
+        })
+      }
+      onToggleAward={(awardId: AwardId) =>
+        dispatch({
+          type: "editor/toggleAward",
+          payload: { awardId },
         })
       }
     />
