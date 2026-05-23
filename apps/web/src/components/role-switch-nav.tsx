@@ -33,7 +33,8 @@ export default function RoleSwitchNav() {
   useEffect(() => {
     const saved = globalThis.localStorage.getItem("uaps-role") as Role | null;
     if (saved === "candidate" || saved === "recruiter") {
-      setRole(saved);
+      // schedule setRole to avoid calling setState synchronously within the effect
+      void Promise.resolve().then(() => setRole(saved));
     }
   }, []);
 
