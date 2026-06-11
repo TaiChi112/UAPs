@@ -1,6 +1,8 @@
 # Universal Academic Portfolio System (UAPS)
 
-> **A structured platform for developers to manage a canonical portfolio of skills, projects, and experiences — then compose multiple targeted resume versions from that single source of truth — with a recruiter-facing marketplace and controlled access governance.**
+> **A structured platform for developers to manage a canonical portfolio of skills, projects, and experiences — then compose multiple targeted resume versions from that single source of truth, with AI job description tailoring and PDF export.**
+
+*Note: Legacy recruiter marketplace, access governance workflows, and HR search endpoints were removed during the current Resume Builder codebase isolation refactoring.*
 
 ---
 
@@ -20,11 +22,11 @@
 
 ### 1.1 Problem Statement
 
-Software professionals frequently maintain multiple inconsistent versions of their resume across different formats and platforms. When targeting different roles or companies, they manually duplicate and edit documents with no systematic way to track which version was sent where, who accessed it, or whether the recruiter was legitimate. This creates three compounding problems:
+Software professionals frequently maintain multiple inconsistent versions of their resume across different formats and platforms. When targeting different roles or companies, they manually duplicate and edit documents with no systematic way to track which version has which content, or ensure consistency. This creates compounding problems:
 
 - **Content fragmentation** — skills, projects, and experiences are scattered across documents.
-- **No version control** — there is no audit trail of which resume version was presented for which role.
-- **No access governance** — once a PDF is shared, the owner loses all visibility into downstream usage, opening the door to data misuse and recruiting scams.
+- **No version control** — there is no audit trail of which resume version has been composed with which subset of portfolio items.
+- **Manual tailoring** — adjusting resumes for different job descriptions is tedious and manual.
 
 ### 1.2 Core Objectives
 
@@ -32,11 +34,8 @@ Software professionals frequently maintain multiple inconsistent versions of the
 |---|-----------|--------|
 | 1 | Provide a single canonical portfolio store (skills, projects, experiences) | ✅ Implemented |
 | 2 | Allow composition of multiple targeted resume versions from portfolio items | ✅ Implemented |
-| 3 | Export resumes as JSON, Markdown, PNG image, and PDF | ✅ Implemented |
-| 4 | Expose a public recruiter marketplace with skill/role/experience filtering | ✅ Implemented |
-| 5 | Implement an owner-gated access request and approval workflow | ✅ Implemented |
-| 6 | Maintain a tamper-evident audit log of all recruiter interactions | ✅ Implemented |
-| 7 | Anti-fraud signal registry for suspicious recruiter behaviour | 🏗 Schema defined, enforcement In Progress |
+| 3 | Export tailored resumes as PDF | ✅ Implemented |
+| 4 | AI-assisted resume tailoring / job description analysis | ✅ Implemented |
 
 ### 1.3 Technology Stack Rationale
 
@@ -45,12 +44,12 @@ Software professionals frequently maintain multiple inconsistent versions of the
 | **Runtime** | [Bun](https://bun.sh) | Near-native JavaScript runtime; replaces Node.js for dramatically faster startup and built-in TypeScript execution without a separate transpile step. |
 | **API Framework** | [Elysia](https://elysiajs.com) | Bun-native, type-safe HTTP framework with end-to-end type inference; reduces boilerplate versus Express without sacrificing composability. |
 | **Schema Validation** | [Zod v4](https://zod.dev) | Runtime validation for all inbound HTTP payloads; `z.treeifyError` provides structured error detail for client consumption. |
-| **Authentication** | [jose](https://github.com/panva/jose) (JWT / HS256) | Lightweight, standards-compliant JWT library; used for both session cookies and short-lived OAuth state tokens. |
-| **Database** | PostgreSQL + `pg` pool | ACID-compliant relational store; chosen for complex multi-table join queries required by the recruiter marketplace filter engine. |
+| **Authentication** | [jose](https://github.com/panva/jose) (JWT / HS256) | Lightweight, standards-compliant JWT library; used for session cookies and short-lived OAuth state tokens. |
+| **Database** | PostgreSQL + Prisma ORM | ACID-compliant relational store; chosen for structured multi-table query relationships in the resume composition engine. |
 | **Frontend** | Next.js 16 + React 19 | App Router with forced dynamic rendering (`force-dynamic`); enables server-side session resolution without a dedicated BFF. |
-| **Styling** | Tailwind CSS v4 | Utility-first; co-located with component markup for rapid iteration in the MVP phase. |
+| **Styling** | Tailwind CSS v4 | Utility-first CSS framework for rapid iteration. |
 | **Monorepo** | Bun Workspaces | Native workspace support eliminates the need for Turborepo or Nx at the current scale. |
-| **Export** | `@resvg/resvg-js` + `pdf-lib` | Server-side SVG rasterisation (PNG) and PDF embedding without a headless browser dependency. |
+| **Export** | `pdfkit` | Server-side PDF generation engine to draw structured tailored resume layouts. |
 | **Auth Provider** | GitHub OAuth 2.0 | Provides verified email, identity linkage, and a developer-centric login UX without requiring a password store. |
 
 ---
@@ -66,19 +65,9 @@ Software professionals frequently maintain multiple inconsistent versions of the
 - **FR-04** — Create, read, update, delete **Resumes** with version name, target job title, target company, visibility, and lifecycle status (`Draft` / `Published` / `Archived`).
 - **FR-05** — Compose a resume by cherry-picking a subset of portfolio projects, skills, and experiences.
 - **FR-06** — Manage a per-resume **Baseline** (contact card: full name, headline, email, phone, location, LinkedIn, portfolio URL, GitHub URL, professional summary).
-- **FR-07** — Export a resume in four formats: `json` (structured data), `md` (Markdown), `image` (PNG), `pdf`.
+- **FR-07** — Export a resume as a styled PDF.
 - **FR-08** — Authenticate via GitHub OAuth 2.0; session maintained via an `HttpOnly` JWT cookie (7-day expiry).
-
-#### Recruiter Marketplace (Public / Unauthenticated)
-- **FR-09** — Browse published resumes with visibility `public` or `company-only` without authentication.
-- **FR-10** — Filter resumes by: job title (ILIKE), required skills (all-match), experience keyword (full-text ILIKE), minimum experience years, and visibility tier.
-- **FR-11** — Preview a candidate's quick-view card (skills, projects, experiences, baseline summary) before requesting access.
-- **FR-12** — Submit an **Access Request** identifying the recruiter, company, purpose, target position, and requested access level (`read-only` / `export`).
-
-#### Access Governance (Owner)
-- **FR-13** — List all incoming access requests for owned resumes, optionally filtered by status.
-- **FR-14** — Approve or reject an access request; approved requests expire after 30 days.
-- **FR-15** — View a full **Audit Log** of recruiter interactions (`request`, `approve`, `reject`, `view`, `export`, `revoke`, `blocked`).
+- **FR-09** — AI-assisted resume tailoring via job description analysis, mapping vault skills, and suggesting tailored feedback.
 
 ### 2.2 Non-Functional Requirements
 
@@ -86,20 +75,16 @@ Software professionals frequently maintain multiple inconsistent versions of the
 |----|-------------|-------------------------|
 | NFR-01 | **Security** — Session tokens must be `HttpOnly`, `SameSite=Lax`, and `Secure` in production. | `auth.ts` → `makeSessionCookie` |
 | NFR-02 | **Security** — OAuth state parameter must be a short-lived (10-minute) signed JWT to prevent CSRF. | `auth.ts` → `createOauthState` |
-| NFR-03 | **Data Integrity** — All multi-table writes must be atomic. | `withTransaction` wrapper in `db.ts` |
-| NFR-04 | **Data Integrity** — Proficiency levels, project statuses, resume statuses, and visibility values are enforced at both application and database constraint levels. | `CHECK` constraints in `001_init_uaps.sql` + Zod enums in `app.ts` |
-| NFR-05 | **Auditability** — Every recruiter interaction is written to an immutable audit log including IP address, user-agent, and referrer. | `resume_access_audit_logs` table + `createResumeAccessRequest` in `db.ts` |
-| NFR-06 | **Performance** — Recruiter marketplace query uses indexed columns (`visibility`, `target_job_title`, `user_id`) and a lateral sub-query for experience year aggregation. | `listRecruiterVisibleResumes` in `db.ts` |
-| NFR-07 | **Developer Experience** — Full TypeScript strict mode across all workspaces. | Root `tsconfig.json` |
-| NFR-08 | **Scalability** — Database connections are pooled via `pg.Pool`. | `db.ts` Pool instantiation |
+| NFR-03 | **Data Integrity** — All multi-table writes must be atomic. | Prisma Transactions in repositories |
+| NFR-04 | **Data Integrity** — Proficiency levels, project statuses, resume statuses, and visibility values are enforced at both application and database constraint levels. | `CHECK` constraints in database + Zod enums in schemas |
+| NFR-05 | **Developer Experience** — Full TypeScript strict mode across all workspaces. | Root `tsconfig.json` |
+| NFR-06 | **Scalability** — Database connections are pooled and managed via Prisma client. | Prisma initialization |
 
 ### 2.3 Stakeholders / User Roles
 
 | Role | Description |
 |------|-------------|
-| **Portfolio Owner** | A developer or academic who manages their skills, projects, and experience, composes resume versions, and governs recruiter access to their profile. Authenticates via GitHub. |
-| **Recruiter** | A talent acquisition professional who browses the public marketplace, previews candidate profiles, and submits a formal access request. Does **not** require authentication in the MVP. |
-| **Platform Administrator** | [To be defined] — Will manage company verification status, recruiter risk levels, and fraud signal resolution using the `companies`, `recruiter_verifications`, and `fraud_signals` tables already present in the schema. |
+| **Portfolio Owner** | A developer or academic who manages their skills, projects, and experience, composes resume versions, and governs their profile. Authenticates via GitHub. |
 
 ---
 
@@ -115,8 +100,8 @@ Universal_Academic_Portfolio_System/
 │   ├── api/          # Elysia HTTP API — Bun runtime
 │   └── web/          # Next.js 16 frontend — React 19
 └── packages/
-    ├── db/           # SQL migration scripts (PostgreSQL DDL + seeds)
-    └── shared/       # [Reserved — empty; intended for cross-app types]
+    ├── db/           # SQL migration scripts (PostgreSQL DDL)
+    └── shared/       # Shared models and schemas (Zod/TypeScript)
 ```
 
 **Request Flow:**
@@ -124,27 +109,25 @@ Universal_Academic_Portfolio_System/
 ```mermaid
 flowchart TD
     A["🌐 Browser"]
-    B["Next.js\n(apps/web)\nSSR session resolution via server-api.ts"]
+    B["Next.js\n(apps/web)\nSSR session and API resolution"]
     C["Elysia API\n(apps/api) — /v1/*"]
     D[("PostgreSQL")]
 
     A -->|"HTTP request"| B
     B -->|"REST · JSON over HTTP\ncredentials: include"| C
-    C -->|"Zod validation → business logic\n→ pg.Pool queries"| D
+    C -->|"Zod validation → business logic\n→ Prisma queries"| D
 ```
 
-The API and Web are **decoupled services** communicating over HTTP, making them independently deployable and scalable.
+The API and Web are decoupled services communicating over HTTP, making them independently deployable and scalable.
 
 ### 3.2 Architectural Patterns & Design Patterns
 
 | Pattern | Application |
 |---------|-------------|
-| **Repository Pattern** | `db.ts` acts as the data access layer. All SQL is encapsulated in named async functions (`listResumes`, `createProject`, etc.). `app.ts` never writes raw SQL — it only calls repository functions. |
-| **Facade Pattern** | `src/lib/api.ts` (frontend) wraps all `fetch` calls behind typed helper functions (`getResumes`, `createSkill`, etc.), hiding HTTP details from page components. |
-| **Strategy Pattern (Export Pipeline)** | `export-renderer.ts` implements three distinct render strategies (`buildResumeMarkdown`, `renderResumeImage`, `renderResumePdf`) selected at runtime by the `format` path parameter. |
-| **Template Method (SVG rendering)** | `buildResumeSvg` defines the resume document template; `renderResumeImage` and `renderResumePdf` call it as the first step in their respective pipelines. |
-| **Unit of Work / Transaction Wrapper** | `withTransaction(runner)` in `db.ts` encapsulates `BEGIN` / `COMMIT` / `ROLLBACK` logic, allowing any multi-step operation to participate in a transaction without duplicating control flow. |
-| **Middleware / Derive Pattern** | Elysia's `.derive()` is used to resolve the session JWT and inject `userId` into every handler context, a clean equivalent of Express middleware applied globally. |
+| **Repository Pattern** | Encapsulated in the `repositories` directory. All database queries are managed by Prisma repositories (e.g., `OrmVaultRepository`). |
+| **Facade Pattern** | `src/lib/api.ts` (frontend) wraps all `fetch` calls behind typed helper functions (`getResumes`, etc.), hiding HTTP details from page components. |
+| **Strategy Pattern (Export Pipeline)** | `resume-builder-export` rendering pipeline implements strategies selected at runtime by the export endpoint. |
+| **Derive Pattern** | Elysia's `.derive()` is used to resolve the session JWT and inject `userId` into every handler context. |
 | **Envelope Response** | All API responses follow `{ ok: boolean, data?: T, error?: { code, message, details? } }`, providing a consistent contract for client error handling. |
 
 ### 3.3 Data Model
@@ -180,6 +163,20 @@ erDiagram
         string achievement
         date start_date
         date end_date
+    }
+
+    certificates {
+        uuid certificate_id PK
+        uuid user_id FK
+        string name
+        string year
+    }
+
+    awards {
+        uuid award_id PK
+        uuid user_id FK
+        string name
+        string description
     }
 
     resumes {
@@ -241,61 +238,22 @@ erDiagram
         uuid experience_id FK
     }
 
-    companies {
-        uuid company_id PK
-        string legal_name
-        string domain UK
-        string verification_status
-    }
-
-    recruiter_accounts {
-        uuid recruiter_id PK
-        uuid company_id FK
-        string email UK
-        string risk_level
-        string account_status
-    }
-
-    resume_access_requests {
-        uuid access_request_id PK
+    resume_certificates {
         uuid resume_id FK
-        uuid recruiter_id FK
-        string purpose
-        string position_title
-        string requested_visibility
-        string request_status
-        timestamp expires_at
+        uuid certificate_id FK
     }
 
-    resume_access_audit_logs {
-        uuid audit_id PK
+    resume_awards {
         uuid resume_id FK
-        uuid recruiter_id FK
-        string action
-        string ip_address
-        string user_agent
-        json metadata
-    }
-
-    recruiter_verifications {
-        uuid verification_id PK
-        uuid recruiter_id FK
-        string verification_type
-        string verification_status
-    }
-
-    fraud_signals {
-        uuid fraud_signal_id PK
-        uuid recruiter_id FK
-        string signal_type
-        string severity
-        timestamp resolved_at
+        uuid award_id FK
     }
 
     %% --- Portfolio ownership ---
     users ||--o{ projects : "owns"
     users ||--o{ experiences : "owns"
     users ||--o{ resumes : "owns"
+    users ||--o{ certificates : "owns"
+    users ||--o{ awards : "owns"
 
     %% --- Skill ownership (M:N via user_skills) ---
     users ||--o{ user_skills : "proficient in"
@@ -317,22 +275,16 @@ erDiagram
     skills ||--o{ resume_skills : "selected in"
     resumes ||--o{ resume_experiences : "composes"
     experiences ||--o{ resume_experiences : "included in"
-
-    %% --- Recruiter access governance ---
-    companies ||--o{ recruiter_accounts : "employs"
-    recruiter_accounts ||--o{ resume_access_requests : "submits"
-    resumes ||--o{ resume_access_requests : "receives"
-    recruiter_accounts ||--o{ resume_access_audit_logs : "logged in"
-    resumes ||--o{ resume_access_audit_logs : "logged for"
-    recruiter_accounts ||--o{ recruiter_verifications : "verified by"
-    recruiter_accounts ||--o{ fraud_signals : "flagged by"
+    resumes ||--o{ resume_certificates : "composes"
+    certificates ||--o{ resume_certificates : "included in"
+    resumes ||--o{ resume_awards : "composes"
+    awards ||--o{ resume_awards : "included in"
 ```
 
 **Key Design Decisions:**
 - `skills` is a **global registry** (unique by name); ownership is expressed via the `user_skills` junction table, allowing proficiency levels to vary per-user without duplicating skill records.
 - `resume_basics` is a **1:1 optional extension** of `resumes`, allowing a resume to be created without a baseline and enriched later.
-- `visibility` on `resumes` is enforced with a `CHECK` constraint at the DB level: `private | public | company-only`.
-- `resume_access_requests.expires_at` is set to `+30 days` upon approval — enabling future automated expiry enforcement.
+- `visibility` on `resumes` is enforced with a `CHECK` constraint at the database level: `private | public | company-only`.
 
 ---
 
@@ -344,41 +296,42 @@ erDiagram
 apps/api/
 ├── index.ts              # Entrypoint: instantiates Elysia app, binds to PORT
 └── src/
-    ├── app.ts            # Route definitions — all HTTP handlers (923 lines)
+    ├── app.ts            # Route definitions — active HTTP handlers
     ├── auth.ts           # JWT session + OAuth state helpers (jose)
-    ├── db.ts             # Repository layer — all PostgreSQL queries (1,920 lines)
-    ├── export-renderer.ts # SVG/PNG/PDF resume rendering pipeline
-    └── store.ts          # In-memory store (legacy; superseded by db.ts, retained for reference)
+    ├── db/               # Active database module and repositories
+    │   ├── index.ts      # Main database exports
+    │   ├── pool.ts       # Raw pg pool setup
+    │   ├── prisma.ts     # Prisma client setup
+    │   └── repositories/ # Vault and resume repository implementations
+    └── resume-builder-export/ # PDF/metadata export mapping and rendering
+        ├── index.ts
+        └── resume-builder-pdf.renderer.ts
 
 apps/web/
 └── src/
     ├── app/
-    │   ├── layout.tsx        # Root layout: Space Grotesk font, topbar, role-switch nav
-    │   ├── page.tsx          # Landing page with embedded recruiter marketplace
-    │   ├── auth/             # GitHub OAuth entry points
-    │   ├── dashboard/        # Owner portfolio dashboard
-    │   ├── hr/filter/        # Recruiter filter & search page
-    │   ├── portfolio/        # Portfolio item management pages
-    │   └── resume/           # Resume create / compose / preview / export pages
-    ├── components/
-    │   ├── auth-nav-button.tsx       # Session-aware login/logout button
-    │   ├── role-switch-nav.tsx       # Toggle between Owner and Recruiter views
-    │   └── hr-resume-marketplace.tsx # Full recruiter search, filter, quick-view, and access request UI
+    │   ├── layout.tsx        # Root layout: Space Grotesk font, topbar
+    │   ├── auth/             # GitHub OAuth entry points (login, logout)
+    │   └── (resume-builder)/ # Main active Resume Builder flow routes
+    │       ├── layout.tsx
+    │       ├── page.tsx      # Main landing/dashboard page
+    │       └── resume/
+    │           ├── ai/
+    │           │   └── page.tsx # AI-assisted resume tailoring
+    │           └── manual/
+    │               ├── page.tsx # Manual resume composition
+    │               └── [resumeId]/
+    │                   └── page.tsx # Manual resume composer for specific draft
+    ├── features/resume-builder/ # React state, UI components, and client-side logic
     └── lib/
-        ├── api.ts            # Client-side typed API functions (fetch wrapper)
-        └── server-api.ts     # Server-side API calls (used in RSC / Server Actions)
+        └── api.ts            # Client-side typed API functions (fetch wrapper)
 
 packages/db/sql/
-├── 001_init_uaps.sql                        # Base schema: users, skills, projects, experiences, resumes
-├── 002_seed_mock_use_case.sql               # Development seed data
-├── 003_resume_visibility_recruiter_access.sql # Visibility, recruiter governance tables, audit logs
-└── 004_seed_public_recruiter_marketplace.sql  # Idempotent marketplace demo seed (2 personas)
-
-scripts/
-└── smoke-hr-flow.ps1   # PowerShell smoke test: validates home page, HR filter, search, quick-view, access request
+├── 001_bootstrap_active_schema.sql          # Clean bootstrap schema (16 active tables)
+└── legacy/                                  # Archived legacy migrations/seeds (for reference)
 ```
 
-For the product vision, MVP scope, and a language-specific README in English-first format, see [apps/web/README.md](apps/web/README.md).
+For the product vision and MVP scope, see [apps/web/README.md](apps/web/README.md).
 
 ### 4.2 API Surface
 
@@ -388,42 +341,30 @@ For the product vision, MVP scope, and a language-specific README in English-fir
 |--------|------|------|-------------|
 | `GET` | `/health` | Public | Service liveness check |
 | `GET` | `/auth/github/start` | Public | Initiates GitHub OAuth redirect |
+| `GET` | `/auth/github/config` | Public | Returns GitHub configuration |
 | `GET` | `/auth/github/callback` | Public | Exchanges OAuth code; sets session cookie |
 | `GET` | `/auth/session` | Cookie | Returns current session user |
 | `POST` | `/auth/logout` | Cookie | Clears session cookie |
-| `GET` | `/users/me/summary` | 🔒 | Portfolio counts + active resume |
-| `GET/POST` | `/skills` | 🔒 | List / create skills |
-| `PUT/DELETE` | `/skills/:skillId` | 🔒 | Update / delete a skill |
-| `GET/POST` | `/projects` | 🔒 | List / create projects |
-| `PUT/DELETE` | `/projects/:projectId` | 🔒 | Update / delete a project |
-| `GET/POST` | `/experiences` | 🔒 | List / create experiences |
-| `PUT/DELETE` | `/experiences/:experienceId` | 🔒 | Update / delete an experience |
-| `GET/POST` | `/resumes` | 🔒 | List / create resumes |
-| `PUT/DELETE` | `/resumes/:resumeId` | 🔒 | Update / delete a resume |
-| `POST` | `/resumes/:resumeId/compose` | 🔒 | Set resume composition (projects, skills, experiences) |
-| `GET/PUT` | `/resumes/:resumeId/baseline` | 🔒 | Get / upsert resume baseline (contact card) |
-| `GET` | `/resumes/:resumeId/preview` | 🔒 | Full resume preview with hydrated items |
-| `GET` | `/resumes/:resumeId/export/:format` | 🔒 | Export as `json`, `md`, `image`, `pdf` |
-| `GET` | `/resumes/access-requests` | 🔒 | List incoming access requests |
-| `POST` | `/resumes/access-requests/:requestId/review` | 🔒 | Approve or reject a request |
-| `GET` | `/resumes/access-audit-logs` | 🔒 | View recruiter interaction audit log |
-| `GET` | `/hr/resumes` | Public | Search recruiter-visible resumes with filters |
-| `GET` | `/hr/resumes/:resumeId/quick-view` | Public | Candidate preview card |
-| `POST` | `/hr/access-requests` | Public | Submit an access request |
+| `GET` | `/resume-builder/snapshot` | 🔒 | Loads entire vault snapshot (skills, projects, experiences, resumes) |
+| `POST` | `/resume-builder/skills` | 🔒 | Creates a new skill in the vault |
+| `POST` | `/resume-builder/projects` | 🔒 | Creates a new project in the vault |
+| `POST` | `/resume-builder/analyze-jd` | 🔒 | Submits a job description to trigger AI analysis |
+| `POST` | `/resume-builder/resumes` | 🔒 | Creates a new resume draft |
+| `PUT` | `/resume-builder/resumes/:resumeId` | 🔒 | Saves resume config and baseline info |
+| `POST` | `/resume-builder/resumes/:resumeId/duplicate` | 🔒 | Duplicates an existing resume |
+| `DELETE` | `/resume-builder/resumes/:resumeId` | 🔒 | Deletes a resume |
+| `PATCH` | `/resume-builder/resumes/:resumeId/status` | 🔒 | Updates resume lifecycle status |
+| `GET` | `/resume-builder/resumes/:resumeId/export` | 🔒 | Exports tailored resume as PDF |
 
 ### 4.3 Core Module Highlights
 
-**`db.ts` — Repository Layer**
-- `withClient` / `withTransaction`: RAII-style connection management; transactions automatically rollback on exception.
-- `mapSkillIdsByProject` / `mapCompositionByResume`: Parallel batch queries using `Promise.all`, building `Map<id, id[]>` structures to avoid N+1 query patterns.
-- `listRecruiterVisibleResumes`: A single composite SQL query with lateral sub-queries for experience-year aggregation and a `CASE WHEN` baseline-progress score (0–100 in 20-point increments).
-- `ensureRecruiterAccount`: Implements upsert-like logic across `companies` and `recruiter_accounts`, auto-provisioning a company record on first encounter.
+**`db` — Repository Layer**
+- Encapsulated via `IVaultBackendRepository` with concrete implementations (e.g. `OrmVaultRepository` leveraging Prisma client).
+- Batch queries optimize relation loading to prevent N+1 queries.
 
-**`export-renderer.ts` — Export Pipeline**
-- `buildResumeMarkdown` → Plain-text Markdown string.
-- `buildResumeSvg` → A 1240×1754 SVG document (A4 portrait aspect ratio) with a linear gradient background and `foreignObject` content block. All user content is XML-escaped before injection.
-- `renderResumeImage` → Rasterises the SVG via `@resvg/resvg-js` to a PNG `Buffer`.
-- `renderResumePdf` → Embeds the PNG into a `pdf-lib` `PDFDocument`, returning the raw PDF bytes.
+**`resume-builder-export` — PDF Export Pipeline**
+- Processes structured resume configurations and formats a clean visual layout.
+- Generates structured PDF outputs using pdfkit, avoiding heavy browser-based rendering stacks.
 
 **`auth.ts` — Authentication**
 - Session tokens: HS256 JWT, 7-day expiry, signed with `JWT_SECRET`.
@@ -459,25 +400,16 @@ NEXT_PUBLIC_WEB_BASE_URL=http://localhost:3000
 
 ### 5.1 Current State
 
-A PowerShell **smoke test** script (`scripts/smoke-hr-flow.ps1`) validates the critical public recruiter flow end-to-end against a running local instance:
+Unit and integration tests are executed using the built-in Bun test runner for backend code and Vitest for frontend code.
 
-1. `SMOKE_HOME_PAGE` — Asserts HTTP 200 on the landing page.
-2. `SMOKE_HR_FILTER_PAGE` — Asserts HTTP 200 on the recruiter filter page.
-3. `SMOKE_SEARCH` — Calls `/v1/hr/resumes?requiredSkills=AWS,Docker&minExperienceYears=2` and asserts at least one result.
-4. `SMOKE_QUICK_VIEW` — Fetches the quick-view of the first result and asserts skill data is present.
-5. `SMOKE_ACCESS_REQUEST` — Submits a mock recruiter access request and asserts a returned `accessRequestId`.
-
-### 5.2 Intended Testing Strategy
-
-> [To be defined / In Progress]
+### 5.2 Testing Strategy
 
 | Layer | Framework | Scope |
 |-------|-----------|-------|
-| **Unit** | [Bun test runner](https://bun.sh/docs/cli/test) (`bun test`) | `auth.ts` helpers, `export-renderer.ts` render functions, Zod schema validation edge cases |
-| **Integration** | Bun test + a test PostgreSQL database | `db.ts` repository functions (create/read/update/delete for all entities, transaction rollback behaviour) |
-| **API Contract** | [Elysia Eden](https://elysiajs.com/eden/overview.html) or Bun test + `fetch` | All `/v1/*` endpoints: happy path, 401, 404, 422 validation error shapes |
-| **End-to-End** | [Playwright](https://playwright.dev) | Owner sign-in → create skill → create resume → compose → export; Recruiter search → quick-view → access request |
-| **Smoke** | `scripts/smoke-hr-flow.ps1` | Post-deployment liveness check (already implemented) |
+| **Unit** | [Bun test runner](https://bun.sh/docs/cli/test) (`bun test`) | `auth.ts` helpers, schema validation, and core analysis services |
+| **Integration (Backend)** | Bun test + Prisma client | Repository functions (create, duplicate, status updates, transaction checks) |
+| **Unit / Integration (Frontend)** | Vitest + React Testing Library | Resume Builder state transitions, React component renders, preview modals |
+| **End-to-End** | [Playwright](https://playwright.dev) | Owner sign-in → create skill → create resume → compose → export |
 
 ---
 
@@ -495,28 +427,23 @@ A PowerShell **smoke test** script (`scripts/smoke-hr-flow.ps1`) validates the c
 # 1. Install dependencies (all workspaces)
 bun install
 
-# 2. Apply database migrations in order
-psql -d uaps -f packages/db/sql/001_init_uaps.sql
-psql -d uaps -f packages/db/sql/002_seed_mock_use_case.sql
-psql -d uaps -f packages/db/sql/003_resume_visibility_recruiter_access.sql
-psql -d uaps -f packages/db/sql/004_seed_public_recruiter_marketplace.sql
+# 2. Apply database bootstrap SQL
+psql -d uaps -f packages/db/sql/001_bootstrap_active_schema.sql
 
 # 3. Configure environment variables
 cp apps/api/.env.example apps/api/.env   # then fill in secrets
 cp apps/web/.env.example apps/web/.env
 
-# 4. Start both services concurrently
+# 4. Run database seed (optional)
+bun run --cwd apps/api seed:vault-test
+
+# 5. Start both services concurrently
 bun run dev
 # API → http://localhost:4000
 # Web → http://localhost:3000
-
-# 5. Run smoke tests (optional)
-powershell -File scripts/smoke-hr-flow.ps1
 ```
 
 ### 6.3 Intended Deployment Architecture
-
-> [To be defined / In Progress]
 
 | Component | Recommended Target |
 |-----------|-------------------|
@@ -531,39 +458,16 @@ powershell -File scripts/smoke-hr-flow.ps1
 
 ### 7.1 Scalability Considerations
 
-- **Connection Pooling:** The `pg.Pool` in `db.ts` is already in place. For higher throughput, introduce [PgBouncer](https://www.pgbouncer.org) as a connection proxy in front of PostgreSQL.
-- **Read Replicas:** The recruiter marketplace query (`listRecruiterVisibleResumes`) is read-only. Routing it to a read replica would decouple reporting load from write-critical paths.
-- **Caching:** The marketplace filter query is a strong candidate for a short-lived (30–60 second) Redis cache keyed by serialised filter parameters, given recruiter browse patterns are repetitive.
+- **Connection Pooling:** Database connection limits are managed using pooled resources via PostgreSQL.
 - **Horizontal Scaling:** The API is stateless (session state is in the JWT cookie, persistence in PostgreSQL), so multiple API instances can run behind a load balancer without sticky sessions.
 
-### 7.2 Security & Governance Roadmap
-
-- **Recruiter Verification Flow:** The `recruiter_verifications` and `fraud_signals` tables are schema-ready. A background worker to auto-escalate `risk_level` on unverified accounts submitting many requests in a short window is the next enforcement layer.
-- **Access Expiry Enforcement:** `resume_access_requests.expires_at` is populated on approval. A scheduled job (cron or pg_cron) should transition `approved` → `expired` records past their expiry timestamp.
-- **Rate Limiting:** The public `/hr/access-requests` endpoint is unauthenticated and should be rate-limited by IP (e.g., via a middleware layer or an upstream edge proxy).
-- **Email Notifications:** Notify portfolio owners on new access requests; notify recruiters on approval/rejection. Integration point: send-grid / resend / AWS SES.
-
-### 7.3 Observability
-
-> [To be defined / In Progress]
+### 7.2 Observability
 
 | Signal | Recommended Tool |
 |--------|-----------------|
 | **Structured Logging** | Pino (API) / Next.js built-in logger (Web) |
-| **Metrics** | Prometheus + Grafana or Datadog |
-| **Tracing** | OpenTelemetry SDK → Jaeger or Datadog APM |
 | **Error Tracking** | Sentry (both API and Web) |
 | **Uptime** | `/v1/health` endpoint → external monitor (UptimeRobot, Better Uptime) |
-
-### 7.4 Planned Future Enhancements
-
-| Milestone | Feature |
-|-----------|---------|
-| **v0.2** | Platform Administrator dashboard (company verification, recruiter risk management, fraud signal resolution) |
-| **v0.3** | Email notification system for access request lifecycle events |
-| **v0.4** | AI-assisted resume composition — suggest which portfolio items best match a given job description |
-| **v0.5** | Resume analytics — track view counts, access request conversion rates per resume version |
-| **v1.0** | Public portfolio page (`/p/:githubLogin`) — shareable, markdown-rendered public profile |
 
 ---
 
@@ -575,8 +479,6 @@ Monorepo root scripts:
   bun run dev:api       # API only  (bun --hot index.ts on port 4000)
   bun run dev:web       # Web only  (next dev on port 3000)
   bun run build:web     # Production Next.js build
-  bun run typecheck:api # tsc --noEmit on the API workspace
-  bun run lint:web      # ESLint on the Web workspace
+  bun run typecheck     # Typecheck API and Web workspaces
+  bun run test          # Run all test suites
 ```
-
----
