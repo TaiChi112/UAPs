@@ -51,7 +51,7 @@ export interface ResumeAnalysisServiceOptions {
 }
 
 const RESUME_ANALYSIS_SYSTEM_PROMPT = [
-  "You are a resume tailoring engine for an academic portfolio and HR marketplace.",
+  "You are a resume tailoring engine for a resume vault and portfolio system.",
   "Your task is to analyze a job description against a candidate vault and return a strict JSON object.",
   "Only use IDs that are explicitly present in the provided vault arrays.",
   "Never invent IDs, skills, projects, experiences, certificates, awards, or employers.",
