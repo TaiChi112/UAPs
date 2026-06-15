@@ -34,6 +34,11 @@ export interface ResumeCardProps {
     resumeId: ResumeId,
     event: MouseEvent<HTMLButtonElement>,
   ) => void;
+  onVisibilityChange: (
+    resumeId: ResumeId,
+    visibility: string,
+    event: ChangeEvent<HTMLSelectElement>,
+  ) => void;
 }
 
 export function ResumeCard({
@@ -44,6 +49,7 @@ export function ResumeCard({
   onEdit,
   onDuplicate,
   onDelete,
+  onVisibilityChange,
 }: ResumeCardProps) {
   return (
     <div
@@ -70,6 +76,23 @@ export function ResumeCard({
               <option value="Draft">Draft</option>
               <option value="Applied">Applied</option>
               <option value="Interviewing">Interviewing</option>
+            </select>
+            <Tag className="w-3 h-3 absolute right-2.5 top-2 opacity-50 pointer-events-none" />
+          </div>
+          <div className="relative" onClick={(event) => event.stopPropagation()}>
+            <select
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border outline-none appearance-none cursor-pointer pr-6 ${(resume as any).visibility === "public" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}
+              value={(resume as any).visibility || "private"}
+              onChange={(event) =>
+                onVisibilityChange(
+                  resume.id,
+                  event.target.value,
+                  event,
+                )
+              }
+            >
+              <option value="private">Private</option>
+              <option value="public">Public</option>
             </select>
             <Tag className="w-3 h-3 absolute right-2.5 top-2 opacity-50 pointer-events-none" />
           </div>
