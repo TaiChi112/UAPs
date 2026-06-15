@@ -1,6 +1,9 @@
 import type {
   CreateSkillInput,
   FeatureResumeStatus,
+  NewAwardDraft,
+  NewCertificateDraft,
+  NewExperienceDraft,
   NewProjectDraft,
   ResumeBuilderSnapshot,
   ResumeId,
@@ -9,6 +12,9 @@ import type {
   VaultData,
   VaultProject,
   VaultSkill,
+  VaultExperience,
+  VaultCertificate,
+  VaultAward,
 } from "@uaps/shared/resume-builder";
 
 export type VaultBackendUserId = string;
@@ -34,6 +40,67 @@ export interface IVaultBackendRepository {
     userId: VaultBackendUserId,
     input: NewProjectDraft,
   ): Promise<VaultProject>;
+  updateProject(
+    userId: VaultBackendUserId,
+    projectId: string,
+    input: NewProjectDraft,
+  ): Promise<VaultProject>;
+  deleteProject(
+    userId: VaultBackendUserId,
+    projectId: string,
+  ): Promise<boolean>;
+
+  createExperience(
+    userId: VaultBackendUserId,
+    input: NewExperienceDraft,
+  ): Promise<VaultExperience>;
+  updateExperience(
+    userId: VaultBackendUserId,
+    experienceId: string,
+    input: NewExperienceDraft,
+  ): Promise<VaultExperience>;
+  deleteExperience(
+    userId: VaultBackendUserId,
+    experienceId: string,
+  ): Promise<boolean>;
+
+  createCertificate(
+    userId: VaultBackendUserId,
+    input: NewCertificateDraft,
+  ): Promise<VaultCertificate>;
+  updateCertificate(
+    userId: VaultBackendUserId,
+    certificateId: string,
+    input: NewCertificateDraft,
+  ): Promise<VaultCertificate>;
+  deleteCertificate(
+    userId: VaultBackendUserId,
+    certificateId: string,
+  ): Promise<boolean>;
+
+  createAward(
+    userId: VaultBackendUserId,
+    input: NewAwardDraft,
+  ): Promise<VaultAward>;
+  updateAward(
+    userId: VaultBackendUserId,
+    awardId: string,
+    input: NewAwardDraft,
+  ): Promise<VaultAward>;
+  deleteAward(
+    userId: VaultBackendUserId,
+    awardId: string,
+  ): Promise<boolean>;
+
+  updateSkill(
+    userId: VaultBackendUserId,
+    skillId: string,
+    input: CreateSkillInput,
+  ): Promise<VaultSkill>;
+  deleteSkill(
+    userId: VaultBackendUserId,
+    skillId: string,
+  ): Promise<boolean>;
   saveResume(
     userId: VaultBackendUserId,
     input: UpsertSavedResumeInput,
