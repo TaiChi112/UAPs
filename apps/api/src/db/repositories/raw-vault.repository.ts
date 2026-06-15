@@ -577,10 +577,27 @@ export class RawVaultRepository implements IVaultBackendRepository {
     return {
       id: asProjectId(project.project_id),
       title: project.title,
-      role: input.role.trim(),
+      role: input.role?.trim() || "",
       description: project.description ?? "",
     };
   }
+
+  async updateProject(): Promise<VaultProject> { throw new Error("Not implemented"); }
+  async deleteProject(): Promise<boolean> { throw new Error("Not implemented"); }
+  async updateSkill(): Promise<VaultSkill> { throw new Error("Not implemented"); }
+  async deleteSkill(): Promise<boolean> { throw new Error("Not implemented"); }
+
+  async createExperience(): Promise<import("@uaps/shared/resume-builder").VaultExperience> { throw new Error("Not implemented"); }
+  async updateExperience(): Promise<import("@uaps/shared/resume-builder").VaultExperience> { throw new Error("Not implemented"); }
+  async deleteExperience(): Promise<boolean> { throw new Error("Not implemented"); }
+
+  async createCertificate(): Promise<import("@uaps/shared/resume-builder").VaultCertificate> { throw new Error("Not implemented"); }
+  async updateCertificate(): Promise<import("@uaps/shared/resume-builder").VaultCertificate> { throw new Error("Not implemented"); }
+  async deleteCertificate(): Promise<boolean> { throw new Error("Not implemented"); }
+
+  async createAward(): Promise<import("@uaps/shared/resume-builder").VaultAward> { throw new Error("Not implemented"); }
+  async updateAward(): Promise<import("@uaps/shared/resume-builder").VaultAward> { throw new Error("Not implemented"); }
+  async deleteAward(): Promise<boolean> { throw new Error("Not implemented"); }
 
   async saveResume(
     userId: VaultBackendUserId,
