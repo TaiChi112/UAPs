@@ -7,6 +7,9 @@ import type {
   CertificateId,
   ExperienceId,
   NewProjectDraft,
+  NewExperienceDraft,
+  NewCertificateDraft,
+  NewAwardDraft,
   PreviewModalState,
   ProjectId,
   ResumeBuilderSnapshot,
@@ -26,6 +29,12 @@ export interface ResumeBuilderEditorState {
   newSkill: string;
   showProjectForm: boolean;
   newProject: NewProjectDraft;
+  showExperienceForm: boolean;
+  newExperience: NewExperienceDraft;
+  showCertificateForm: boolean;
+  newCertificate: NewCertificateDraft;
+  showAwardForm: boolean;
+  newAward: NewAwardDraft;
 }
 
 export interface ResumeBuilderAiState {
@@ -45,6 +54,7 @@ export interface ResumeBuilderState {
   editor: ResumeBuilderEditorState;
   ai: ResumeBuilderAiState;
   ui: ResumeBuilderUiState;
+  source?: "api" | "mock" | "hybrid";
 }
 
 export type ResumeBuilderAction =
@@ -57,6 +67,7 @@ export type ResumeBuilderAction =
   | { type: "editor/setTargetRole"; payload: { value: string } }
   | { type: "editor/setTargetCompany"; payload: { value: string } }
   | { type: "editor/setSummary"; payload: { value: string } }
+  | { type: "editor/setSectionOrder"; payload: { order: string[] } }
   | { type: "editor/toggleSkill"; payload: { skillId: SkillId } }
   | { type: "editor/toggleProject"; payload: { projectId: ProjectId } }
   | { type: "editor/toggleExperience"; payload: { experienceId: ExperienceId } }
@@ -73,6 +84,64 @@ export type ResumeBuilderAction =
       type: "editor/addProjectToVault";
       payload: { projectId: ProjectId; draft: NewProjectDraft };
     }
+  | {
+      type: "editor/updateProjectInVault";
+      payload: { projectId: ProjectId; draft: NewProjectDraft };
+    }
+  | {
+      type: "editor/deleteProjectFromVault";
+      payload: { projectId: ProjectId };
+    }
+  | { type: "editor/setExperienceFormOpen"; payload: { open: boolean } }
+  | { type: "editor/setNewExperience"; payload: { draft: NewExperienceDraft } }
+  | {
+      type: "editor/addExperienceToVault";
+      payload: { experienceId: ExperienceId; draft: NewExperienceDraft };
+    }
+  | {
+      type: "editor/updateExperienceInVault";
+      payload: { experienceId: ExperienceId; draft: NewExperienceDraft };
+    }
+  | {
+      type: "editor/deleteExperienceFromVault";
+      payload: { experienceId: ExperienceId };
+    }
+  | { type: "editor/setCertificateFormOpen"; payload: { open: boolean } }
+  | { type: "editor/setNewCertificate"; payload: { draft: NewCertificateDraft } }
+  | {
+      type: "editor/addCertificateToVault";
+      payload: { certificateId: CertificateId; draft: NewCertificateDraft };
+    }
+  | {
+      type: "editor/updateCertificateInVault";
+      payload: { certificateId: CertificateId; draft: NewCertificateDraft };
+    }
+  | {
+      type: "editor/deleteCertificateFromVault";
+      payload: { certificateId: CertificateId };
+    }
+  | { type: "editor/setAwardFormOpen"; payload: { open: boolean } }
+  | { type: "editor/setNewAward"; payload: { draft: NewAwardDraft } }
+  | {
+      type: "editor/addAwardToVault";
+      payload: { awardId: AwardId; draft: NewAwardDraft };
+    }
+  | {
+      type: "editor/updateAwardInVault";
+      payload: { awardId: AwardId; draft: NewAwardDraft };
+    }
+  | {
+      type: "editor/deleteAwardFromVault";
+      payload: { awardId: AwardId };
+    }
+  | {
+      type: "editor/updateSkillInVault";
+      payload: { skillId: SkillId; skillName: string };
+    }
+  | {
+      type: "editor/deleteSkillFromVault";
+      payload: { skillId: SkillId };
+    }
   | { type: "resume/upsert"; payload: { resume: SavedResume } }
   | { type: "resume/delete"; payload: { resumeId: ResumeId } }
   | {
@@ -82,6 +151,10 @@ export type ResumeBuilderAction =
   | {
       type: "resume/updateStatus";
       payload: { resumeId: ResumeId; status: SavedResume["status"] };
+    }
+  | {
+      type: "resume/updateVisibility";
+      payload: { resumeId: ResumeId; visibility: string };
     }
   | { type: "ai/reset" }
   | { type: "ai/setJobDescription"; payload: { value: string } }
