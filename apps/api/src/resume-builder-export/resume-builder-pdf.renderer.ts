@@ -147,7 +147,6 @@ const writeHeader = (
   const subheadingParts = [
     payload.targetCompany.trim(),
     payload.date.trim(),
-    payload.status.trim(),
   ].filter((value) => value.length > 0);
 
   if (subheadingParts.length > 0) {
@@ -198,15 +197,17 @@ const writeSkillsSection = (
   document: PdfDocumentInstance,
   skills: readonly ResumeBuilderExportSkill[],
 ) => {
-  writeSectionHeading(document, "Technical Skills");
+  if (skills.length === 0) {
+    return;
+  }
 
   const skillsLine = formatSkillsLine(skills);
 
   if (!skillsLine) {
-    writeEmptyState(document, "No skills selected for this resume.");
     return;
   }
 
+  writeSectionHeading(document, "Technical Skills");
   writeParagraph(document, skillsLine);
 };
 
@@ -214,24 +215,43 @@ const writeProjectsSection = (
   document: PdfDocumentInstance,
   projects: readonly ResumeBuilderExportProject[],
 ) => {
-  writeSectionHeading(document, "Selected Projects");
-
   if (projects.length === 0) {
-    writeEmptyState(document, "No projects selected for this resume.");
     return;
   }
 
-  for (const project of projects) {
-    document.font("Helvetica-Bold").fontSize(11).fillColor(COLORS.heading);
-    document.text(project.title);
+  writeSectionHeading(document, "Projects");
 
-    if (project.role.trim()) {
-      document.font("Helvetica-Bold").fontSize(10).fillColor(COLORS.accent);
-      document.text(project.role.trim());
+  for (const project of projects) {
+    const currentY = document.y;
+    document.font("Helvetica-Bold").fontSize(11).fillColor(COLORS.heading);
+
+    if (project.githubUrl) {
+      document.text(project.title, document.page.margins.left, currentY, {
+        link: project.githubUrl,
+        underline: false,
+      });
+    } else {
+      document.text(project.title, document.page.margins.left, currentY);
+    }
+
+    if (project.duration?.trim()) {
+      document.font("Helvetica").fontSize(10).fillColor(COLORS.muted);
+      document.text(project.duration.trim(), document.page.margins.left, currentY, {
+        align: "right",
+        width: document.page.width - document.page.margins.left - document.page.margins.right,
+      });
+      // Ensure cursor moves below the title/duration
+      document.y = currentY + document.currentLineHeight();
     }
 
     if (project.description.trim()) {
-      writeBulletItem(document, project.description.trim());
+      document.moveDown(0.4);
+      const descLines = project.description.trim().split("\n");
+      for (const line of descLines) {
+        if (line.trim()) {
+          writeBulletItem(document, line.trim());
+        }
+      }
     }
 
     document.moveDown(0.55);
@@ -250,7 +270,13 @@ const writeExperienceEntry = (
   }
 
   if (experience.responsibilities.trim()) {
-    writeBulletItem(document, experience.responsibilities.trim());
+    document.moveDown(0.2);
+    const descLines = experience.responsibilities.trim().split("\n");
+    for (const line of descLines) {
+      if (line.trim()) {
+        writeBulletItem(document, line.trim());
+      }
+    }
   }
 
   document.moveDown(0.55);
@@ -260,12 +286,11 @@ const writeExperienceSection = (
   document: PdfDocumentInstance,
   experience: readonly ResumeBuilderExportExperience[],
 ) => {
-  writeSectionHeading(document, "Professional Experience");
-
   if (experience.length === 0) {
-    writeEmptyState(document, "No experience entries selected for this resume.");
     return;
   }
+
+  writeSectionHeading(document, "Professional Experience");
 
   for (const experienceEntry of experience) {
     writeExperienceEntry(document, experienceEntry);
@@ -297,34 +322,54 @@ const renderContent = (
 
   writeHeader(document, payload);
   writeSummarySection(document, payload);
-  document.moveDown(0.25);
-  writeSkillsSection(document, payload.skills);
-  document.moveDown(0.15);
-  writeProjectsSection(document, payload.projects);
-  document.moveDown(0.15);
-  writeExperienceSection(document, payload.experience);
+  const sectionOrder = payload.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"];
 
-  if (payload.certificates.length > 0) {
-    document.moveDown(0.15);
-    writeCompactListSection(
-      document,
-      "Certificates",
-      payload.certificates,
-      (certificate: ResumeBuilderExportCertificate) =>
-        certificate.year.trim().length > 0
-          ? `${certificate.name} (${certificate.year})`
-          : certificate.name,
-    );
-  }
-
-  if (payload.awards.length > 0) {
-    document.moveDown(0.15);
-    writeCompactListSection(
-      document,
-      "Awards",
-      payload.awards,
-      (award: ResumeBuilderExportAward) => `${award.name}: ${award.desc}`,
-    );
+  for (const section of sectionOrder) {
+    switch (section) {
+      case "skills":
+        if (payload.skills.length > 0) {
+          document.moveDown(0.25);
+          writeSkillsSection(document, payload.skills);
+        }
+        break;
+      case "projects":
+        if (payload.projects.length > 0) {
+          document.moveDown(0.15);
+          writeProjectsSection(document, payload.projects);
+        }
+        break;
+      case "experience":
+        if (payload.experience.length > 0) {
+          document.moveDown(0.15);
+          writeExperienceSection(document, payload.experience);
+        }
+        break;
+      case "certificates":
+        if (payload.certificates.length > 0) {
+          document.moveDown(0.15);
+          writeCompactListSection(
+            document,
+            "Certificates",
+            payload.certificates,
+            (certificate: ResumeBuilderExportCertificate) =>
+              certificate.year.trim().length > 0
+                ? `${certificate.name} (${certificate.year})`
+                : certificate.name,
+          );
+        }
+        break;
+      case "awards":
+        if (payload.awards.length > 0) {
+          document.moveDown(0.15);
+          writeCompactListSection(
+            document,
+            "Awards",
+            payload.awards,
+            (award: ResumeBuilderExportAward) => `${award.name}: ${award.desc}`,
+          );
+        }
+        break;
+    }
   }
 };
 
@@ -357,10 +402,7 @@ const createDocument = (
 const measureRequiredPageHeight = (payload: ResumeBuilderExportPayload) => {
   const document = createDocument(payload, MEASUREMENT_PAGE_HEIGHT);
   renderContent(document, payload);
-  const measuredHeight = Math.max(
-    MIN_PAGE_HEIGHT,
-    Math.ceil(document.y + PAGE_MARGIN + CONTENT_INSET + CARD_MARGIN),
-  );
+  const measuredHeight = Math.ceil(document.y + PAGE_MARGIN + CONTENT_INSET + CARD_MARGIN);
   document.end();
 
   return measuredHeight;
