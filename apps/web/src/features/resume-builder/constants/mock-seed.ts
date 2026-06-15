@@ -68,14 +68,14 @@ export const INITIAL_VAULT_DATA = {
     {
       id: PROJECT_IDS.ecommerceMicroservices,
       title: "E-Commerce Microservices",
-      role: "Backend Developer",
+      duration: "Jan 2025 - Mar 2025",
       description:
         "Built scalable backend services using Java and Spring Boot.",
     },
     {
       id: PROJECT_IDS.customerChurnPrediction,
       title: "Customer Churn Prediction",
-      role: "AI Engineer",
+      duration: "Aug 2024 - Dec 2024",
       description:
         "Developed an ML model using Python and TensorFlow with 85% accuracy.",
     },
@@ -124,6 +124,7 @@ export const INITIAL_SAVED_RESUMES = [
     title: "AI Engineer @ Company A",
     date: "10 May 2026",
     status: "Applied",
+    visibility: "private",
     config: {
       targetRole: "AI Engineer",
       targetCompany: "Company A",
@@ -138,6 +139,7 @@ export const INITIAL_SAVED_RESUMES = [
       selectedExperience: [EXPERIENCE_IDS.dataDrivenInternship],
       selectedCerts: [CERTIFICATE_IDS.tensorflow],
       selectedAwards: [AWARD_IDS.hackathonFirstPlace],
+      sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
     },
   },
   {
@@ -145,6 +147,7 @@ export const INITIAL_SAVED_RESUMES = [
     title: "Software Engineer @ Tech Flow",
     date: "08 May 2026",
     status: "Interviewing",
+    visibility: "private",
     config: {
       targetRole: "Software Engineer",
       targetCompany: "Tech Flow",
@@ -160,6 +163,7 @@ export const INITIAL_SAVED_RESUMES = [
       selectedExperience: [EXPERIENCE_IDS.techSolutionsInternship],
       selectedCerts: [CERTIFICATE_IDS.awsDeveloper],
       selectedAwards: [],
+      sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
     },
   },
 ] satisfies SavedResume[];
@@ -173,4 +177,5 @@ export const EMPTY_RESUME_CONFIG: ResumeConfig = {
   selectedExperience: [],
   selectedCerts: [],
   selectedAwards: [],
+  sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
 };

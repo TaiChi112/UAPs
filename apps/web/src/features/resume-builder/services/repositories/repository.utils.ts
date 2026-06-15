@@ -23,6 +23,7 @@ export const cloneResumeConfig = (config: ResumeConfig): ResumeConfig => ({
   selectedExperience: [...config.selectedExperience],
   selectedCerts: [...config.selectedCerts],
   selectedAwards: [...config.selectedAwards],
+  sectionOrder: [...(config.sectionOrder ?? ["skills", "projects", "experience", "certificates", "awards"])],
 });
 
 export const cloneSavedResume = (resume: SavedResume): SavedResume => ({
@@ -64,6 +65,7 @@ type RawResumeConfig = {
   selectedExperience?: string[];
   selectedCerts?: string[];
   selectedAwards?: string[];
+  sectionOrder?: string[];
 };
 
 type RawSavedResume = {
@@ -71,6 +73,7 @@ type RawSavedResume = {
   title?: string;
   date?: string;
   status?: SavedResume["status"];
+  visibility?: SavedResume["visibility"];
   config?: RawResumeConfig;
 };
 
@@ -82,6 +85,8 @@ type RawVaultData = {
     title?: string;
     role?: string;
     description?: string;
+    duration?: string;
+    githubUrl?: string;
   }>;
   experience?: Array<{
     id?: string;
@@ -119,6 +124,7 @@ export const normalizeResumeConfig = (
   selectedAwards: (config?.selectedAwards ?? []).map((id) =>
     asAwardId(String(id)),
   ),
+  sectionOrder: config?.sectionOrder ?? ["skills", "projects", "experience", "certificates", "awards"],
 });
 
 export const normalizeSavedResume = (
@@ -128,6 +134,7 @@ export const normalizeSavedResume = (
   title: resume.title ?? "Untitled Resume",
   date: resume.date ?? "",
   status: resume.status ?? "Draft",
+  visibility: resume.visibility ?? "private",
   config: normalizeResumeConfig(resume.config),
 });
 
@@ -148,8 +155,9 @@ export const normalizeVaultData = (
   projects: (vault?.projects ?? []).map((project) => ({
     id: asProjectId(String(project.id ?? `p-${Date.now()}`)),
     title: project.title ?? "",
-    role: project.role ?? "",
+    duration: project.duration ?? "",
     description: project.description ?? "",
+    githubUrl: project.githubUrl ?? "",
   })),
   experience: (vault?.experience ?? []).map((experience) => ({
     id: asExperienceId(String(experience.id ?? `e-${Date.now()}`)),
