@@ -5,11 +5,15 @@ import {
   createInitialAiState,
   createInitialEditorState,
   createInitialNewProjectDraft,
+  createInitialNewExperienceDraft,
+  createInitialNewCertificateDraft,
+  createInitialNewAwardDraft,
 } from "./initial-state";
 import type {
   ResumeBuilderAction,
   ResumeBuilderState,
 } from "./resume-builder.types";
+import type { SavedResume } from "@uaps/shared/resume-builder";
 
 const toggleIdInList = <TId extends string>(items: TId[], id: TId) => {
   if (items.includes(id)) {
@@ -29,6 +33,7 @@ export const resumeBuilderReducer = (
         ...state,
         db: cloneVaultData(action.payload.snapshot.vault),
         savedResumes: action.payload.snapshot.savedResumes.map(cloneSavedResume),
+        source: action.payload.snapshot.source,
       };
 
     case "editor/startManualCreate":
@@ -97,6 +102,18 @@ export const resumeBuilderReducer = (
           resumeConfig: {
             ...state.editor.resumeConfig,
             summary: action.payload.value,
+          },
+        },
+      };
+
+    case "editor/setSectionOrder":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            sectionOrder: action.payload.order,
           },
         },
       };
@@ -212,6 +229,33 @@ export const resumeBuilderReducer = (
         },
       };
 
+    case "editor/updateSkillInVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          skills: state.db.skills.map(skill => 
+            skill.id === action.payload.skillId ? { ...skill, name: action.payload.skillName.trim() } : skill
+          ),
+        },
+      };
+
+    case "editor/deleteSkillFromVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          skills: state.db.skills.filter(skill => skill.id !== action.payload.skillId),
+        },
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedSkills: state.editor.resumeConfig.selectedSkills.filter(id => id !== action.payload.skillId),
+          },
+        },
+      };
+
     case "editor/setProjectFormOpen":
       return {
         ...state,
@@ -240,6 +284,7 @@ export const resumeBuilderReducer = (
             {
               id: action.payload.projectId,
               ...action.payload.draft,
+              duration: `${action.payload.draft.startDate} - ${action.payload.draft.endDate}`
             },
           ],
         },
@@ -253,6 +298,287 @@ export const resumeBuilderReducer = (
               ...state.editor.resumeConfig.selectedProjects,
               action.payload.projectId,
             ],
+          },
+        },
+      };
+    case "editor/updateProjectInVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          projects: state.db.projects.map((project) =>
+            project.id === action.payload.projectId
+              ? {
+                  ...project,
+                  ...action.payload.draft,
+                  duration: `${action.payload.draft.startDate} - ${action.payload.draft.endDate}`
+                }
+              : project,
+          ),
+        },
+      };
+
+    case "editor/deleteProjectFromVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          projects: state.db.projects.filter(
+            (project) => project.id !== action.payload.projectId,
+          ),
+        },
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedProjects: state.editor.resumeConfig.selectedProjects.filter(
+              (id) => id !== action.payload.projectId,
+            ),
+          },
+        },
+      };
+
+    case "editor/setExperienceFormOpen":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          showExperienceForm: action.payload.open,
+        },
+      };
+
+    case "editor/setNewExperience":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          newExperience: { ...action.payload.draft },
+        },
+      };
+
+    case "editor/addExperienceToVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          experience: [
+            ...state.db.experience,
+            {
+              id: action.payload.experienceId,
+              ...action.payload.draft,
+              duration: `${action.payload.draft.startDate} - ${action.payload.draft.endDate}`,
+            },
+          ],
+        },
+        editor: {
+          ...state.editor,
+          showExperienceForm: false,
+          newExperience: createInitialNewExperienceDraft(),
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedExperience: [
+              ...state.editor.resumeConfig.selectedExperience,
+              action.payload.experienceId,
+            ],
+          },
+        },
+      };
+
+    case "editor/updateExperienceInVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          experience: state.db.experience.map((experience) =>
+            experience.id === action.payload.experienceId
+              ? {
+                  ...experience,
+                  ...action.payload.draft,
+                  duration: `${action.payload.draft.startDate} - ${action.payload.draft.endDate}`,
+                }
+              : experience,
+          ),
+        },
+      };
+
+    case "editor/deleteExperienceFromVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          experience: state.db.experience.filter(
+            (experience) => experience.id !== action.payload.experienceId,
+          ),
+        },
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedExperience: state.editor.resumeConfig.selectedExperience.filter(
+              (id) => id !== action.payload.experienceId,
+            ),
+          },
+        },
+      };
+
+    case "editor/setCertificateFormOpen":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          showCertificateForm: action.payload.open,
+        },
+      };
+
+    case "editor/setNewCertificate":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          newCertificate: { ...action.payload.draft },
+        },
+      };
+
+    case "editor/addCertificateToVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          certificates: [
+            ...state.db.certificates,
+            {
+              id: action.payload.certificateId,
+              ...action.payload.draft,
+            },
+          ],
+        },
+        editor: {
+          ...state.editor,
+          showCertificateForm: false,
+          newCertificate: createInitialNewCertificateDraft(),
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedCerts: [
+              ...state.editor.resumeConfig.selectedCerts,
+              action.payload.certificateId,
+            ],
+          },
+        },
+      };
+
+    case "editor/updateCertificateInVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          certificates: state.db.certificates.map((certificate) =>
+            certificate.id === action.payload.certificateId
+              ? {
+                  ...certificate,
+                  ...action.payload.draft,
+                }
+              : certificate,
+          ),
+        },
+      };
+
+    case "editor/deleteCertificateFromVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          certificates: state.db.certificates.filter(
+            (certificate) => certificate.id !== action.payload.certificateId,
+          ),
+        },
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedCerts: state.editor.resumeConfig.selectedCerts.filter(
+              (id) => id !== action.payload.certificateId,
+            ),
+          },
+        },
+      };
+
+    case "editor/setAwardFormOpen":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          showAwardForm: action.payload.open,
+        },
+      };
+
+    case "editor/setNewAward":
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          newAward: { ...action.payload.draft },
+        },
+      };
+
+    case "editor/addAwardToVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          awards: [
+            ...state.db.awards,
+            {
+              id: action.payload.awardId,
+              ...action.payload.draft,
+            },
+          ],
+        },
+        editor: {
+          ...state.editor,
+          showAwardForm: false,
+          newAward: createInitialNewAwardDraft(),
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedAwards: [
+              ...state.editor.resumeConfig.selectedAwards,
+              action.payload.awardId,
+            ],
+          },
+        },
+      };
+
+    case "editor/updateAwardInVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          awards: state.db.awards.map((award) =>
+            award.id === action.payload.awardId
+              ? {
+                  ...award,
+                  ...action.payload.draft,
+                }
+              : award,
+          ),
+        },
+      };
+
+    case "editor/deleteAwardFromVault":
+      return {
+        ...state,
+        db: {
+          ...state.db,
+          awards: state.db.awards.filter(
+            (award) => award.id !== action.payload.awardId,
+          ),
+        },
+        editor: {
+          ...state.editor,
+          resumeConfig: {
+            ...state.editor.resumeConfig,
+            selectedAwards: state.editor.resumeConfig.selectedAwards.filter(
+              (id) => id !== action.payload.awardId,
+            ),
           },
         },
       };
@@ -338,6 +664,35 @@ export const resumeBuilderReducer = (
         ui: {
           ...state.ui,
           previewModal: nextPreviewModal,
+        },
+      };
+    }
+
+    case "resume/updateVisibility": {
+      const nextSavedResumes = state.savedResumes.map((resume) =>
+        resume.id === action.payload.resumeId
+          ? { ...resume, visibility: action.payload.visibility } as any
+          : resume,
+      );
+
+      const nextPreviewModal =
+        state.ui.previewModal.kind === "open" &&
+        state.ui.previewModal.resume.id === action.payload.resumeId
+          ? {
+              kind: "open" as const,
+              resume: {
+                ...state.ui.previewModal.resume,
+                visibility: action.payload.visibility,
+              } as any,
+            }
+          : state.ui.previewModal;
+
+      return {
+        ...state,
+        savedResumes: nextSavedResumes as SavedResume[],
+        ui: {
+          ...state.ui,
+          previewModal: nextPreviewModal as any,
         },
       };
     }
