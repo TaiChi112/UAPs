@@ -1,4 +1,6 @@
+import * as React from "react";
 import type { FormEvent } from "react";
+import { Eye } from "lucide-react";
 
 import type {
   AwardId,
@@ -12,6 +14,7 @@ import type {
 } from "@uaps/shared/resume-builder";
 
 import { ResumeDocument } from "../preview/resume-document";
+import { MobilePreviewDrawer } from "../preview/mobile-preview-drawer";
 import { ExperienceSection } from "./experiences-section";
 import { CertificatesSection } from "./certificates-section";
 import { AwardsSection } from "./awards-section";
@@ -108,6 +111,8 @@ export function ManualBuilderView({
   onAddAward,
   onSectionOrderChange,
 }: ManualBuilderViewProps) {
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = React.useState(false);
+
   const activeSections = [
     config.selectedSkills.length > 0 ? "skills" : null,
     config.selectedProjects.length > 0 ? "projects" : null,
@@ -117,7 +122,7 @@ export function ManualBuilderView({
   ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 p-4 md:p-6 font-sans">
+    <div className="min-h-screen bg-slate-100 text-slate-800 p-4 md:p-6 font-sans relative">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[90vh]">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
           <ManualBuilderHeader
@@ -203,6 +208,20 @@ export function ManualBuilderView({
           <ResumeDocument config={config} db={db} />
         </div>
       </div>
+
+      <button
+        className="fixed bottom-6 right-6 lg:hidden z-30 bg-blue-600 text-white p-4 rounded-full shadow-2xl hover:bg-blue-700 transition-colors flex items-center justify-center animate-bounce"
+        onClick={() => setIsMobilePreviewOpen(true)}
+      >
+        <Eye className="w-6 h-6" />
+      </button>
+
+      <MobilePreviewDrawer
+        isOpen={isMobilePreviewOpen}
+        onClose={() => setIsMobilePreviewOpen(false)}
+        config={config}
+        db={db}
+      />
     </div>
   );
 }

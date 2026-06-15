@@ -1,3 +1,6 @@
+import * as React from "react";
+import { Eye } from "lucide-react";
+
 import type {
   AiAnalysisState,
   AiFeedback,
@@ -11,6 +14,7 @@ import { AiPreviewPanel } from "./ai-preview-panel";
 import { AnalysisLoadingPanel } from "./analysis-loading-panel";
 import { JobDescriptionPanel } from "./job-description-panel";
 import { ToastBanner } from "../shared/toast-banner";
+import { MobilePreviewDrawer } from "../preview/mobile-preview-drawer";
 
 export interface AiBuilderViewProps {
   toastMessage?: string | null;
@@ -45,6 +49,8 @@ export function AiBuilderView({
   onAnalyze,
   onFixMissingSkill,
 }: AiBuilderViewProps) {
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = React.useState(false);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6 font-sans relative">
       {toastMessage && <ToastBanner message={toastMessage} />}
@@ -77,13 +83,30 @@ export function AiBuilderView({
           )}
         </div>
 
-        <AiPreviewPanel
-          aiAnalysisState={aiAnalysisState}
-          db={db}
-          emptyConfig={emptyConfig}
-          resumeConfig={resumeConfig}
-        />
+        <div className="hidden lg:flex lg:col-span-8">
+          <AiPreviewPanel
+            aiAnalysisState={aiAnalysisState}
+            db={db}
+            emptyConfig={emptyConfig}
+            resumeConfig={resumeConfig}
+          />
+        </div>
       </div>
+
+      <button
+        className="fixed bottom-6 right-6 lg:hidden z-30 bg-blue-600 text-white p-4 rounded-full shadow-2xl hover:bg-blue-700 transition-colors flex items-center justify-center animate-bounce"
+        onClick={() => setIsMobilePreviewOpen(true)}
+      >
+        <Eye className="w-6 h-6" />
+      </button>
+
+      <MobilePreviewDrawer
+        isOpen={isMobilePreviewOpen}
+        onClose={() => setIsMobilePreviewOpen(false)}
+        config={aiAnalysisState === "done" ? resumeConfig : emptyConfig}
+        db={db}
+        isLoading={aiAnalysisState === "analyzing"}
+      />
     </div>
   );
 }
