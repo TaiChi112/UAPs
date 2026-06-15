@@ -536,17 +536,7 @@ export const app = new Elysia({ prefix: "/v1" })
       return Response.redirect(loginUrl.toString(), 302);
     }
   })
-  .get("/auth/github/start", (ctx) => {
-    // Compatibility redirect for old github/start calls
-    const returnTo = ctx.query.returnTo ? `?returnTo=${encodeURIComponent(ctx.query.returnTo as string)}` : "";
-    return Response.redirect(`${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/github/start${returnTo}`, 302);
-  })
-  .get("/auth/github/callback", (ctx) => {
-    // Compatibility redirect for old github/callback calls
-    const code = ctx.query.code ? `&code=${ctx.query.code}` : "";
-    const state = ctx.query.state ? `&state=${ctx.query.state}` : "";
-    return Response.redirect(`${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/github/callback?${code}${state}`, 302);
-  })
+
   .post("/auth/dev-bypass", async (ctx) => {
     const user = await prisma.user.upsert({
       where: {

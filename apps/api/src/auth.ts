@@ -142,10 +142,10 @@ export const verifyOauthState = async (token?: string) => {
 
 export const makeSessionCookie = (token: string) => {
   const isSecure = webAppUrl.startsWith("https://");
-  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${isSecure ? "; Secure" : ""}`;
+  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; ${isSecure ? "SameSite=None; Secure;" : "SameSite=Lax;"} Max-Age=604800`;
 };
 
 export const makeExpiredSessionCookie = () => {
   const isSecure = webAppUrl.startsWith("https://");
-  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${isSecure ? "; Secure" : ""}`;
+  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; ${isSecure ? "SameSite=None; Secure;" : "SameSite=Lax;"} Max-Age=0`;
 };
