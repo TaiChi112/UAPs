@@ -64,8 +64,9 @@ const vaultSkillSchema = z.object({
 const vaultProjectSchema = z.object({
   id: brandedIdSchema,
   title: z.string().min(1).max(255),
-  role: z.string().max(255),
+  duration: z.string().max(255).optional().default(""),
   description: z.string().max(5000),
+  githubUrl: z.string().url().max(1000).optional().or(z.literal("")),
 });
 
 const vaultExperienceSchema = z.object({
@@ -112,8 +113,9 @@ const vaultDataSchema = z
     projects: value.projects.map((project) => ({
       id: asProjectId(project.id),
       title: project.title.trim(),
-      role: project.role.trim(),
+      duration: project.duration.trim(),
       description: project.description.trim(),
+      githubUrl: project.githubUrl?.trim() || undefined,
     })),
     experience: value.experience.map((experience) => ({
       id: asExperienceId(experience.id),

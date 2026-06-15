@@ -168,7 +168,7 @@ const buildPromptInput = (request: AnalyzeJobDescriptionRequest) => ({
     projects: request.vault.projects.map((project) => ({
       id: String(project.id),
       title: project.title,
-      role: project.role,
+      duration: project.duration,
       description: project.description,
     })),
     experience: request.vault.experience.map((experience) => ({
