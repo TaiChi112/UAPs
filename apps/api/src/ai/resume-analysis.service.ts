@@ -156,6 +156,7 @@ const buildPromptInput = (request: AnalyzeJobDescriptionRequest) => ({
     selectedExperience: request.currentConfig.selectedExperience.map(String),
     selectedCerts: request.currentConfig.selectedCerts.map(String),
     selectedAwards: request.currentConfig.selectedAwards.map(String),
+    sectionOrder: request.currentConfig.sectionOrder,
   },
   vault: {
     basicInfo: request.vault.basicInfo,
@@ -229,6 +230,7 @@ const normalizeGeneratedConfig = (
     dedupeStrings(generatedConfig.selectedAwards),
     request.vault.awards.map((award) => award.id),
   ),
+  sectionOrder: request.currentConfig.sectionOrder,
 });
 
 export const normalizeResumeAnalysisResult = (

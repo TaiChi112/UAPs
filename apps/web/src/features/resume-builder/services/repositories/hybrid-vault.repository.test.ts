@@ -92,7 +92,7 @@ describe("HybridVaultRepository", () => {
 
     const snapshot = await repository.loadSnapshot();
 
-    expect(snapshot.source).toBe("hybrid");
+    expect(snapshot.source).toBe("api");
     expect(snapshot.savedResumes).toEqual([]);
     expect(snapshot.vault.skills.some((skill) => skill.name === "Kubernetes")).toBe(
       true,

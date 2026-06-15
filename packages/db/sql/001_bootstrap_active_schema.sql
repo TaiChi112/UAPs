@@ -17,6 +17,22 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 1.5. oauth_accounts
+CREATE TABLE oauth_accounts (
+    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    provider_id VARCHAR(255) NOT NULL,
+    provider_login VARCHAR(255),
+    profile_url TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_provider_provider_id UNIQUE (provider, provider_id)
+);
+
+CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+
 -- 2. skills
 CREATE TABLE skills (
     skill_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

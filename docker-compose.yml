@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: uaps
       TZ: UTC
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     volumes:
       - uaps-postgres-data:/var/lib/postgresql/data
       - ./packages/db/sql:/docker-entrypoint-initdb.d:ro
