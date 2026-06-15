@@ -12,10 +12,13 @@ import type {
 } from "@uaps/shared/resume-builder";
 
 import { ResumeDocument } from "../preview/resume-document";
-import { ExperienceCertificatesSection } from "./experience-certificates-section";
+import { ExperienceSection } from "./experiences-section";
+import { CertificatesSection } from "./certificates-section";
+import { AwardsSection } from "./awards-section";
 import { ManualBuilderHeader } from "./manual-builder-header";
 import { ProjectsSection } from "./projects-section";
 import { RoleSummarySection } from "./role-summary-section";
+import { SectionOrderEditor } from "./section-order-editor";
 import { SkillsSection } from "./skills-section";
 
 export interface ManualBuilderViewProps {
@@ -25,6 +28,12 @@ export interface ManualBuilderViewProps {
   newSkill: string;
   showProjectForm: boolean;
   newProject: NewProjectDraft;
+  showExperienceForm: boolean;
+  newExperience: import("@uaps/shared/resume-builder").NewExperienceDraft;
+  showCertificateForm: boolean;
+  newCertificate: import("@uaps/shared/resume-builder").NewCertificateDraft;
+  showAwardForm: boolean;
+  newAward: import("@uaps/shared/resume-builder").NewAwardDraft;
   onCancel: () => void;
   onSave: () => void;
   onTargetRoleChange: (value: string) => void;
@@ -39,8 +48,21 @@ export interface ManualBuilderViewProps {
   onProjectDraftChange: (draft: NewProjectDraft) => void;
   onAddProject: (event: FormEvent<HTMLFormElement>) => void;
   onToggleExperience: (experienceId: ExperienceId) => void;
+  onShowExperienceForm: () => void;
+  onHideExperienceForm: () => void;
+  onExperienceDraftChange: (draft: import("@uaps/shared/resume-builder").NewExperienceDraft) => void;
+  onAddExperience: (event: FormEvent<HTMLFormElement>) => void;
   onToggleCert: (certificateId: CertificateId) => void;
+  onShowCertificateForm: () => void;
+  onHideCertificateForm: () => void;
+  onCertificateDraftChange: (draft: import("@uaps/shared/resume-builder").NewCertificateDraft) => void;
+  onAddCertificate: (event: FormEvent<HTMLFormElement>) => void;
   onToggleAward: (awardId: AwardId) => void;
+  onShowAwardForm: () => void;
+  onHideAwardForm: () => void;
+  onAwardDraftChange: (draft: import("@uaps/shared/resume-builder").NewAwardDraft) => void;
+  onAddAward: (event: FormEvent<HTMLFormElement>) => void;
+  onSectionOrderChange: (newOrder: string[]) => void;
 }
 
 export function ManualBuilderView({
@@ -63,10 +85,37 @@ export function ManualBuilderView({
   onHideProjectForm,
   onProjectDraftChange,
   onAddProject,
+  showExperienceForm,
+  newExperience,
   onToggleExperience,
+  onShowExperienceForm,
+  onHideExperienceForm,
+  onExperienceDraftChange,
+  onAddExperience,
+  showCertificateForm,
+  newCertificate,
   onToggleCert,
+  onShowCertificateForm,
+  onHideCertificateForm,
+  onCertificateDraftChange,
+  onAddCertificate,
+  showAwardForm,
+  newAward,
   onToggleAward,
+  onShowAwardForm,
+  onHideAwardForm,
+  onAwardDraftChange,
+  onAddAward,
+  onSectionOrderChange,
 }: ManualBuilderViewProps) {
+  const activeSections = [
+    config.selectedSkills.length > 0 ? "skills" : null,
+    config.selectedProjects.length > 0 ? "projects" : null,
+    config.selectedExperience.length > 0 ? "experience" : null,
+    config.selectedCerts.length > 0 ? "certificates" : null,
+    config.selectedAwards.length > 0 ? "awards" : null,
+  ].filter(Boolean) as string[];
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 p-4 md:p-6 font-sans">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[90vh]">
@@ -106,16 +155,46 @@ export function ManualBuilderView({
               onAddProject={onAddProject}
             />
 
-            <ExperienceCertificatesSection
+            <ExperienceSection
               experience={db.experience}
-              certificates={db.certificates}
-              awards={db.awards}
               selectedExperienceIds={config.selectedExperience}
-              selectedCertIds={config.selectedCerts}
-              selectedAwardIds={config.selectedAwards}
+              showExperienceForm={showExperienceForm}
+              newExperience={newExperience}
               onToggleExperience={onToggleExperience}
-              onToggleCert={onToggleCert}
+              onShowExperienceForm={onShowExperienceForm}
+              onHideExperienceForm={onHideExperienceForm}
+              onExperienceDraftChange={onExperienceDraftChange}
+              onAddExperience={onAddExperience}
+            />
+
+            <CertificatesSection
+              certificates={db.certificates}
+              selectedCertificateIds={config.selectedCerts}
+              showCertificateForm={showCertificateForm}
+              newCertificate={newCertificate}
+              onToggleCertificate={onToggleCert}
+              onShowCertificateForm={onShowCertificateForm}
+              onHideCertificateForm={onHideCertificateForm}
+              onCertificateDraftChange={onCertificateDraftChange}
+              onAddCertificate={onAddCertificate}
+            />
+
+            <AwardsSection
+              awards={db.awards}
+              selectedAwardIds={config.selectedAwards}
+              showAwardForm={showAwardForm}
+              newAward={newAward}
               onToggleAward={onToggleAward}
+              onShowAwardForm={onShowAwardForm}
+              onHideAwardForm={onHideAwardForm}
+              onAwardDraftChange={onAwardDraftChange}
+              onAddAward={onAddAward}
+            />
+
+            <SectionOrderEditor
+              sectionOrder={config.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"]}
+              activeSections={activeSections}
+              onChange={onSectionOrderChange}
             />
           </div>
         </div>
