@@ -309,7 +309,7 @@ const profiles: SeedProfile[] = [
         versionName: "Senior Full-Stack Engineer @ FinGrid",
         targetJobTitle: "Senior Full-Stack Engineer",
         targetCompany: "FinGrid",
-        visibility: "private",
+        visibility: "public",
         status: "Published",
         isActive: true,
         profileSummary: paragraph(
@@ -339,7 +339,7 @@ const profiles: SeedProfile[] = [
         versionName: "Product Engineer @ CareStack",
         targetJobTitle: "Product Engineer",
         targetCompany: "CareStack",
-        visibility: "private",
+        visibility: "public",
         status: "Archived",
         isActive: false,
         profileSummary: paragraph(
@@ -552,7 +552,7 @@ const profiles: SeedProfile[] = [
         versionName: "Platform Engineer @ CloudArc",
         targetJobTitle: "Platform Engineer",
         targetCompany: "CloudArc",
-        visibility: "private",
+        visibility: "public",
         status: "Published",
         isActive: true,
         profileSummary: paragraph(
@@ -582,7 +582,7 @@ const profiles: SeedProfile[] = [
         versionName: "SRE Lead @ LedgerOps",
         targetJobTitle: "Site Reliability Engineering Lead",
         targetCompany: "LedgerOps",
-        visibility: "private",
+        visibility: "public",
         status: "Archived",
         isActive: false,
         profileSummary: paragraph(
@@ -786,7 +786,7 @@ const profiles: SeedProfile[] = [
         versionName: "ML Engineer @ Nexa Retail AI",
         targetJobTitle: "Machine Learning Engineer",
         targetCompany: "Nexa Retail AI",
-        visibility: "private",
+        visibility: "public",
         status: "Published",
         isActive: true,
         profileSummary: paragraph(
@@ -816,7 +816,7 @@ const profiles: SeedProfile[] = [
         versionName: "Senior Data Scientist @ ClearRisk",
         targetJobTitle: "Senior Data Scientist",
         targetCompany: "ClearRisk",
-        visibility: "private",
+        visibility: "public",
         status: "Draft",
         isActive: false,
         profileSummary: paragraph(
@@ -839,6 +839,64 @@ const profiles: SeedProfile[] = [
         experienceKeys: ["orbit-finance", "insight-collective"],
         certificateKeys: ["tensorflow-cert"],
         awardKeys: ["forecasting-award"],
+      },
+    ],
+  },
+  {
+    email: "john.doe.demo@uaps.local",
+    name: "John Doe",
+    githubLogin: "johndoe-demo",
+    githubId: "demo-johndoe-002",
+    githubUrl: "https://github.com/johndoe-demo",
+    avatarUrl: "https://avatars.githubusercontent.com/u/2002002?v=4",
+    location: "London",
+    phone: "+44 7700 900000",
+    linkedinUrl: "https://linkedin.com/in/johndoe-demo",
+    portfolioUrl: "https://johndoe-demo.dev",
+    skills: [
+      {
+        key: "python",
+        name: "Python",
+        category: "programming",
+        proficiencyLevel: "Expert",
+      },
+      {
+        key: "machine-learning",
+        name: "Machine Learning",
+        category: "data",
+        proficiencyLevel: "Advanced",
+      },
+    ],
+    projects: [
+      {
+        key: "ai-agent",
+        title: "Autonomous AI Agent",
+        description: "Built an autonomous AI agent capable of generating its own code using LLMs.",
+        repoUrl: "https://github.com/johndoe-demo/ai-agent",
+        status: "Completed",
+        isActive: true,
+        skillKeys: ["python", "machine-learning"],
+      }
+    ],
+    experiences: [],
+    certificates: [],
+    awards: [],
+    resumes: [
+      {
+        versionName: "Data Scientist Resume",
+        targetJobTitle: "Senior Data Scientist",
+        targetCompany: "OpenAI",
+        visibility: "public",
+        status: "Published",
+        isActive: true,
+        profileSummary: "Data scientist with 5 years of experience.",
+        headline: "AI Researcher",
+        summary: "Passionate about building AI agents.",
+        skillKeys: ["python", "machine-learning"],
+        projectKeys: ["ai-agent"],
+        experienceKeys: [],
+        certificateKeys: [],
+        awardKeys: [],
       },
     ],
   },
@@ -1151,6 +1209,7 @@ const main = async () => {
         resumes: profile.resumes.length,
       };
       },
+      { timeout: 60000, maxWait: 30000 }
     );
 
     results.push(seededProfile);

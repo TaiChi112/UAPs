@@ -87,10 +87,6 @@ export const getLocalDevSession = async (): Promise<SessionPayload> => {
     throw new Error("Single-player mode is disabled");
   }
 
-  if (globalThis.__uapsLocalDevSession__) {
-    return globalThis.__uapsLocalDevSession__;
-  }
-
   const user = await prisma.user.upsert({
     where: {
       email: LOCAL_DEV_USER.email,
@@ -119,10 +115,6 @@ export const getLocalDevSession = async (): Promise<SessionPayload> => {
     githubId: user.githubId ?? LOCAL_DEV_USER.githubId,
     githubLogin: user.githubLogin ?? LOCAL_DEV_USER.githubLogin,
   };
-
-  if (process.env.NODE_ENV !== "production") {
-    globalThis.__uapsLocalDevSession__ = session;
-  }
 
   return session;
 };
