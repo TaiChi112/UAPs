@@ -23,6 +23,7 @@ model User {
   awards      Award[]
   resumes     Resume[]
   userSkills  UserSkill[]
+  oauthAccounts OAuthAccount[]
 
   @@map("users")
 }
@@ -47,6 +48,8 @@ model Project {
   repoUrl         String?         @db.VarChar(255) @map("repo_url")
   isActive        Boolean         @default(true) @map("is_active")
   status          String          @default("Completed") @db.VarChar(50)
+  startDate       DateTime?       @db.Date @map("start_date")
+  endDate         DateTime?       @db.Date @map("end_date")
   createdAt       DateTime        @default(now()) @db.Timestamp(6) @map("created_at")
   updatedAt       DateTime        @default(now()) @db.Timestamp(6) @map("updated_at")
   user            User            @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -90,6 +93,7 @@ model Resume {
   portfolioUrl       String?            @db.VarChar(255) @map("portfolio_url")
   isActive           Boolean            @default(false) @map("is_active")
   status             String             @default("Draft") @db.VarChar(50)
+  sectionOrder       String[]           @default(["skills", "projects", "experience", "certificates", "awards"]) @map("section_order")
   createdAt          DateTime           @default(now()) @db.Timestamp(6) @map("created_at")
   updatedAt          DateTime           @default(now()) @db.Timestamp(6) @map("updated_at")
   user               User               @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -232,3 +236,22 @@ model ResumeAward {
   @@id([resumeId, awardId])
   @@map("resume_awards")
 }
+
+model OAuthAccount {
+  accountId     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("account_id")
+  userId        String   @db.Uuid @map("user_id")
+  provider      String   @db.VarChar(50)
+  providerId    String   @db.VarChar(255) @map("provider_id")
+  providerLogin String?  @db.VarChar(255) @map("provider_login")
+  profileUrl    String?  @db.Text @map("profile_url")
+  avatarUrl     String?  @db.Text @map("avatar_url")
+  createdAt     DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt     DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+
+  user          User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId], map: "idx_oauth_accounts_user_id")
+  @@map("oauth_accounts")
+}
+

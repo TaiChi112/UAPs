@@ -61,12 +61,13 @@ const createVaultFixture = (): VaultData => ({
 const createResumeConfigFixture = (): ResumeConfig => ({
   targetRole: "Existing Role",
   targetCompany: "Existing Company",
-  summary: "Existing summary",
-  selectedSkills: [],
-  selectedProjects: [],
-  selectedExperience: [],
-  selectedCerts: [],
-  selectedAwards: [],
+  summary: "A great engineer.",
+  selectedSkills: [asSkillId("skill-1")],
+  selectedProjects: [asProjectId("proj-1")],
+  selectedExperience: [asExperienceId("exp-1")],
+  selectedCerts: [asCertificateId("cert-1")],
+  selectedAwards: [asAwardId("award-1")],
+  sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
 });
 
 const createRequestFixture = (): AnalyzeJobDescriptionRequest => ({
@@ -109,6 +110,7 @@ describe("createResumeAnalysisService", () => {
         selectedExperience: [asExperienceId("e1")],
         selectedCerts: [asCertificateId("c1")],
         selectedAwards: [asAwardId("a1")],
+        sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
       },
       feedback: {
         matchScore: 100,
