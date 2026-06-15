@@ -44,8 +44,9 @@ export type VaultSkill = {
 export type VaultProject = {
   id: ProjectId;
   title: string;
-  role: string;
+  duration: string;
   description: string;
+  githubUrl?: string;
 };
 
 export type VaultExperience = {
@@ -86,6 +87,7 @@ export type ResumeConfig = {
   selectedExperience: ExperienceId[];
   selectedCerts: CertificateId[];
   selectedAwards: AwardId[];
+  sectionOrder: string[];
 };
 
 export type SavedResume = {
@@ -93,13 +95,37 @@ export type SavedResume = {
   title: string;
   date: string;
   status: FeatureResumeStatus;
+  visibility: string;
+  authorName?: string;
+  authorAvatarUrl?: string;
   config: ResumeConfig;
+  vaultData?: VaultData;
 };
 
 export type NewProjectDraft = {
   title: string;
-  role: string;
+  startDate: string;
+  endDate: string;
   description: string;
+  githubUrl?: string;
+};
+
+export type NewExperienceDraft = {
+  company: string;
+  role: string;
+  startDate: string;
+  endDate: string;
+  responsibilities: string;
+};
+
+export type NewCertificateDraft = {
+  name: string;
+  year: string;
+};
+
+export type NewAwardDraft = {
+  name: string;
+  desc: string;
 };
 
 export type AiFeedback = {
