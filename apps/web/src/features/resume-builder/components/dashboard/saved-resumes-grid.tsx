@@ -26,6 +26,11 @@ export interface SavedResumesGridProps {
     resumeId: ResumeId,
     event: MouseEvent<HTMLButtonElement>,
   ) => void;
+  onVisibilityChange: (
+    resumeId: ResumeId,
+    visibility: string,
+    event: ChangeEvent<HTMLSelectElement>,
+  ) => void;
 }
 
 export function SavedResumesGrid({
@@ -36,6 +41,7 @@ export function SavedResumesGrid({
   onEdit,
   onDuplicate,
   onDelete,
+  onVisibilityChange,
 }: SavedResumesGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,6 +55,7 @@ export function SavedResumesGrid({
           onEdit={onEdit}
           onDuplicate={onDuplicate}
           onDelete={onDelete}
+          onVisibilityChange={onVisibilityChange}
         />
       ))}
     </div>
