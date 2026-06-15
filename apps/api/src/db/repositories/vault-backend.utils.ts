@@ -29,6 +29,10 @@ export type ResumeRecordShape = {
   title: string;
   updatedAt: Date | string;
   status: PersistedResumeStatus | string;
+  visibility: string;
+  authorName?: string;
+  authorAvatarUrl?: string;
+  sectionOrder?: string[];
 } & ResumeCompositionIds;
 
 const monthYearFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -107,11 +111,18 @@ export const toSavedResume = ({
   targetJobTitle,
   title,
   updatedAt,
+  visibility,
+  authorName,
+  authorAvatarUrl,
+  sectionOrder,
 }: ResumeRecordShape): SavedResume => ({
   id: asResumeId(resumeId),
   title,
   date: formatResumeDate(updatedAt),
   status: toFeatureResumeStatus(status),
+  visibility,
+  authorName,
+  authorAvatarUrl,
   config: {
     targetRole: targetJobTitle ?? "",
     targetCompany: targetCompany ?? "",
@@ -125,6 +136,7 @@ export const toSavedResume = ({
       asCertificateId(certificateId),
     ),
     selectedAwards: awardIds.map((awardId) => asAwardId(awardId)),
+    sectionOrder: sectionOrder || ["skills", "projects", "experience", "certificates", "awards"],
   },
 });
 
@@ -148,6 +160,7 @@ export const createEmptyResumeConfig = (): ResumeConfig => ({
   selectedExperience: [],
   selectedCerts: [],
   selectedAwards: [],
+  sectionOrder: ["skills", "projects", "experience", "certificates", "awards"],
 });
 
 export const toBasicInfo = (input: {
