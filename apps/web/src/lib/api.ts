@@ -185,6 +185,27 @@ export const createResumeBuilderSkill = async (
     ),
   );
 
+export const updateResumeBuilderSkill = async (
+  skillId: string,
+  payload: import("@uaps/shared/resume-builder").CreateSkillInput,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultSkill>(
+      `/resume-builder/skills/${skillId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const deleteResumeBuilderSkill = async (skillId: string) =>
+  toMutationResult(
+    request<null>(`/resume-builder/skills/${skillId}`, {
+      method: "DELETE",
+    }),
+  );
+
 export const createResumeBuilderProject = async (
   payload: import("@uaps/shared/resume-builder").NewProjectDraft,
 ) =>
@@ -196,6 +217,129 @@ export const createResumeBuilderProject = async (
         body: JSON.stringify(payload),
       },
     ),
+  );
+
+export const updateResumeBuilderProject = async (
+  projectId: string,
+  payload: import("@uaps/shared/resume-builder").NewProjectDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultProject>(
+      `/resume-builder/projects/${projectId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const deleteResumeBuilderProject = async (projectId: string) =>
+  toMutationResult(
+    request<null>(`/resume-builder/projects/${projectId}`, {
+      method: "DELETE",
+    }),
+  );
+
+export const createResumeBuilderExperience = async (
+  payload: import("@uaps/shared/resume-builder").NewExperienceDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultExperience>(
+      "/resume-builder/experiences",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const updateResumeBuilderExperience = async (
+  experienceId: string,
+  payload: import("@uaps/shared/resume-builder").NewExperienceDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultExperience>(
+      `/resume-builder/experiences/${experienceId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const deleteResumeBuilderExperience = async (experienceId: string) =>
+  toMutationResult(
+    request<null>(`/resume-builder/experiences/${experienceId}`, {
+      method: "DELETE",
+    }),
+  );
+
+export const createResumeBuilderCertificate = async (
+  payload: import("@uaps/shared/resume-builder").NewCertificateDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultCertificate>(
+      "/resume-builder/certificates",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const updateResumeBuilderCertificate = async (
+  certificateId: string,
+  payload: import("@uaps/shared/resume-builder").NewCertificateDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultCertificate>(
+      `/resume-builder/certificates/${certificateId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const deleteResumeBuilderCertificate = async (certificateId: string) =>
+  toMutationResult(
+    request<null>(`/resume-builder/certificates/${certificateId}`, {
+      method: "DELETE",
+    }),
+  );
+
+export const createResumeBuilderAward = async (
+  payload: import("@uaps/shared/resume-builder").NewAwardDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultAward>(
+      "/resume-builder/awards",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const updateResumeBuilderAward = async (
+  awardId: string,
+  payload: import("@uaps/shared/resume-builder").NewAwardDraft,
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").VaultAward>(
+      `/resume-builder/awards/${awardId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const deleteResumeBuilderAward = async (awardId: string) =>
+  toMutationResult(
+    request<null>(`/resume-builder/awards/${awardId}`, {
+      method: "DELETE",
+    }),
   );
 
 export const createResumeBuilderResume = async (
@@ -266,6 +410,23 @@ export const updateResumeBuilderStatus = async (
     ),
   );
 
+export const updateResumeBuilderVisibility = async (
+  resumeId: string,
+  payload: { visibility: string },
+) =>
+  toMutationResult(
+    request<import("@uaps/shared/resume-builder").SavedResume>(
+      `/resume-builder/resumes/${resumeId}/visibility`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+    ),
+  );
+
+export const getResumeBuilderPublicResumes = async () =>
+  (await request<import("@uaps/shared/resume-builder").SavedResume[]>("/resume-builder/resumes/public")).data;
+
 export const analyzeResumeBuilderJobDescription = async (
   payload: import("@uaps/shared/resume-builder").AnalyzeJobDescriptionRequest,
 ) =>
@@ -283,4 +444,19 @@ export const downloadResumeBuilderPdf = async (resumeId: string) =>
   downloadBinary(
     `/resume-builder/resumes/${resumeId}/export`,
     "resume.pdf",
+  );
+
+export const previewResumeBuilderPdf = async (
+  payload: { resume: import("@uaps/shared/resume-builder").SavedResume; vault: import("@uaps/shared/resume-builder").VaultData }
+) =>
+  downloadBinary(
+    `/resume-builder/export/preview`,
+    "resume.pdf",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
   );
