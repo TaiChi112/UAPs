@@ -42,8 +42,27 @@ export const cloneVaultData = (db: VaultData): VaultData => ({
 
 export const createInitialNewProjectDraft = () => ({
   title: "",
-  role: "",
+  startDate: "",
+  endDate: "",
   description: "",
+});
+
+export const createInitialNewExperienceDraft = () => ({
+  company: "",
+  role: "",
+  startDate: "",
+  endDate: "",
+  responsibilities: "",
+});
+
+export const createInitialNewCertificateDraft = () => ({
+  name: "",
+  year: "",
+});
+
+export const createInitialNewAwardDraft = () => ({
+  name: "",
+  desc: "",
 });
 
 export const createInitialEditorState = (): ResumeBuilderEditorState => ({
@@ -53,6 +72,12 @@ export const createInitialEditorState = (): ResumeBuilderEditorState => ({
   newSkill: "",
   showProjectForm: false,
   newProject: createInitialNewProjectDraft(),
+  showExperienceForm: false,
+  newExperience: createInitialNewExperienceDraft(),
+  showCertificateForm: false,
+  newCertificate: createInitialNewCertificateDraft(),
+  showAwardForm: false,
+  newAward: createInitialNewAwardDraft(),
 });
 
 export const createInitialAiState = (): ResumeBuilderAiState => ({
@@ -75,6 +100,7 @@ export const createInitialResumeBuilderState = (): ResumeBuilderState => ({
   editor: createInitialEditorState(),
   ai: createInitialAiState(),
   ui: createInitialUiState(),
+  source: "mock",
 });
 
 export const initialResumeBuilderState = createInitialResumeBuilderState();
