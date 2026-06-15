@@ -855,6 +855,7 @@ export const app = new Elysia({ prefix: "/v1" })
 
       return { ok: true, data: analysis };
     } catch (error) {
+      console.error("[analyze-jd] AI generation failed:", error);
       ctx.set.status = error instanceof z.ZodError ? 400 : 500;
       return formatError(error, "Unable to analyze job description");
     }

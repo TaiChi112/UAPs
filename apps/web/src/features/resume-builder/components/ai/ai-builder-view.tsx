@@ -10,8 +10,10 @@ import { AiInsightsPanel } from "./ai-insights-panel";
 import { AiPreviewPanel } from "./ai-preview-panel";
 import { AnalysisLoadingPanel } from "./analysis-loading-panel";
 import { JobDescriptionPanel } from "./job-description-panel";
+import { ToastBanner } from "../shared/toast-banner";
 
 export interface AiBuilderViewProps {
+  toastMessage?: string | null;
   aiAnalysisState: AiAnalysisState;
   aiFeedback: AiFeedback;
   db: VaultData;
@@ -28,6 +30,7 @@ export interface AiBuilderViewProps {
 }
 
 export function AiBuilderView({
+  toastMessage,
   aiAnalysisState,
   aiFeedback,
   db,
@@ -43,7 +46,9 @@ export function AiBuilderView({
   onFixMissingSkill,
 }: AiBuilderViewProps) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6 font-sans relative">
+      {toastMessage && <ToastBanner message={toastMessage} />}
+
       <AiBuilderHeader
         canSave={aiAnalysisState === "done"}
         onBack={onBack}

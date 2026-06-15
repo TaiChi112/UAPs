@@ -59,6 +59,7 @@ export default function ResumeBuilderAiPage() {
 
   return (
     <AiBuilderView
+      toastMessage={state.ui.toastMessage}
       aiAnalysisState={state.ai.analysisState}
       aiFeedback={state.ai.feedback}
       db={state.db}
