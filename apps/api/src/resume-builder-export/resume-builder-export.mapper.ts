@@ -54,8 +54,9 @@ const mapProjects = (
     vault.projects,
     (project) => ({
       title: project.title,
-      role: project.role,
+      duration: project.duration,
       description: project.description,
+      githubUrl: project.githubUrl,
     }),
   );
 
@@ -118,4 +119,5 @@ export const mapResumeBuilderExportPayload = (
   experience: mapExperience(savedResume, vault),
   certificates: mapCertificates(savedResume, vault),
   awards: mapAwards(savedResume, vault),
+  sectionOrder: savedResume.config.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"],
 });

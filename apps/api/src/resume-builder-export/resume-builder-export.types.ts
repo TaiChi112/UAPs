@@ -14,8 +14,9 @@ export type ResumeBuilderExportSkill = {
 
 export type ResumeBuilderExportProject = {
   title: string;
-  role: string;
+  duration: string;
   description: string;
+  githubUrl?: string;
 };
 
 export type ResumeBuilderExportExperience = {
@@ -49,4 +50,5 @@ export type ResumeBuilderExportPayload = {
   experience: ResumeBuilderExportExperience[];
   certificates: ResumeBuilderExportCertificate[];
   awards: ResumeBuilderExportAward[];
+  sectionOrder: string[];
 };
