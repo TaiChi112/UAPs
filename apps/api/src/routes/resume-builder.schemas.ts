@@ -15,6 +15,9 @@ import {
   type ResumeConfig,
   type ResumeId,
   type UpsertSavedResumeInput,
+  type NewExperienceDraft,
+  type NewCertificateDraft,
+  type NewAwardDraft,
 } from "@uaps/shared/resume-builder";
 
 const brandedIdSchema = z.string().min(1).max(100);
@@ -29,6 +32,7 @@ const resumeConfigSchema = z
     selectedExperience: z.array(brandedIdSchema).default([]),
     selectedCerts: z.array(brandedIdSchema).default([]),
     selectedAwards: z.array(brandedIdSchema).default([]),
+    sectionOrder: z.array(z.string()).default(["skills", "projects", "experience", "certificates", "awards"]),
   })
   .transform(
     (value): ResumeConfig => ({
@@ -40,6 +44,7 @@ const resumeConfigSchema = z
       selectedExperience: value.selectedExperience.map(asExperienceId),
       selectedCerts: value.selectedCerts.map(asCertificateId),
       selectedAwards: value.selectedAwards.map(asAwardId),
+      sectionOrder: value.sectionOrder,
     }),
   );
 
@@ -144,16 +149,56 @@ export const createSkillInputSchema = z
 export const newProjectDraftSchema = z
   .object({
     title: z.string().min(1).max(255),
-    role: z.string().min(1).max(255),
+    startDate: z.string().max(255).optional().default(""),
+    endDate: z.string().max(255).optional().default(""),
     description: z.string().min(1).max(5000),
+    githubUrl: z.string().url().max(1000).optional().or(z.literal("")),
   })
   .transform(
     (value): NewProjectDraft => ({
       title: value.title.trim(),
-      role: value.role.trim(),
+      startDate: value.startDate.trim(),
+      endDate: value.endDate.trim(),
       description: value.description.trim(),
+      githubUrl: value.githubUrl?.trim() || undefined,
     }),
   );
+
+export const newExperienceDraftSchema = z
+  .object({
+    company: z.string().min(1).max(255),
+    role: z.string().min(1).max(255),
+    startDate: z.string().max(255).optional().default(""),
+    endDate: z.string().max(255).optional().default(""),
+    responsibilities: z.string().min(1).max(5000),
+  })
+  .transform((value): NewExperienceDraft => ({
+    company: value.company.trim(),
+    role: value.role.trim(),
+    startDate: value.startDate.trim(),
+    endDate: value.endDate.trim(),
+    responsibilities: value.responsibilities.trim(),
+  }));
+
+export const newCertificateDraftSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    year: z.string().max(255).optional().default(""),
+  })
+  .transform((value): NewCertificateDraft => ({
+    name: value.name.trim(),
+    year: value.year.trim(),
+  }));
+
+export const newAwardDraftSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    desc: z.string().min(1).max(5000),
+  })
+  .transform((value): NewAwardDraft => ({
+    name: value.name.trim(),
+    desc: value.desc.trim(),
+  }));
 
 export const upsertSavedResumeBodySchema = z
   .object({
@@ -189,6 +234,10 @@ export const updateResumeStatusBodySchema = z.object({
   status: z.enum(FEATURE_RESUME_STATUS_VALUES),
 });
 
+export const updateResumeVisibilityBodySchema = z.object({
+  visibility: z.enum(["public", "private"]),
+});
+
 export type UpdateResumeStatusBody = {
   status: FeatureResumeStatus;
 };
@@ -206,3 +255,20 @@ export const analyzeJobDescriptionRequestSchema = z
       currentConfig: value.currentConfig,
     }),
   );
+
+export const previewExportRequestSchema = z.object({
+  resume: z.object({
+    id: brandedIdSchema,
+    title: z.string().min(1).max(255),
+    date: z.string().min(1).max(100),
+    status: z.enum(FEATURE_RESUME_STATUS_VALUES),
+    config: resumeConfigSchema,
+  }).transform(value => ({
+    id: asResumeId(value.id),
+    title: value.title,
+    date: value.date,
+    status: value.status,
+    config: value.config
+  })),
+  vault: vaultDataSchema,
+});
