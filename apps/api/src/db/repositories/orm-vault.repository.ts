@@ -56,6 +56,7 @@ type PrismaResumeWithComposition = Prisma.ResumeGetPayload<{
     resumeExperiences: true;
     resumeProjects: true;
     resumeSkills: true;
+    user: true;
   };
 }>;
 
@@ -135,8 +136,9 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       projects: projects.map((project: Project) => ({
         id: asProjectId(project.projectId),
         title: project.title,
-        role: "",
+        duration: formatDuration(project.startDate, project.endDate),
         description: project.description ?? "",
+        githubUrl: project.repoUrl ?? undefined,
       })),
       experience: experiences.map((experience: Experience) => ({
         id: asExperienceId(experience.experienceId),
@@ -174,6 +176,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         resumeAwards: true,
         resumeProjects: true,
         resumeSkills: true,
+        user: true,
       },
       orderBy: {
         updatedAt: "desc",
@@ -200,6 +203,9 @@ export class OrmVaultRepository implements IVaultBackendRepository {
           (certificate: ResumeCertificate) => certificate.certificateId,
         ),
         awardIds: resume.resumeAwards.map((award: ResumeAward) => award.awardId),
+        visibility: resume.visibility,
+        authorName: resume.user?.name,
+        authorAvatarUrl: resume.user?.avatarUrl || undefined,
       }),
     );
   }
@@ -266,6 +272,9 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         userId,
         title: input.title.trim(),
         description: input.description.trim(),
+        startDate: input.startDate ? new Date(input.startDate) : null,
+        endDate: input.endDate ? new Date(input.endDate) : null,
+        repoUrl: input.githubUrl || null,
         status: "Completed",
         isActive: true,
       },
@@ -274,9 +283,238 @@ export class OrmVaultRepository implements IVaultBackendRepository {
     return {
       id: asProjectId(project.projectId),
       title: project.title,
-      role: input.role.trim(),
+      duration: formatDuration(project.startDate, project.endDate),
       description: project.description ?? "",
+      githubUrl: project.repoUrl ?? undefined,
     };
+  }
+
+  async updateProject(
+    userId: VaultBackendUserId,
+    projectId: string,
+    input: NewProjectDraft,
+  ): Promise<VaultProject> {
+    const project = await prisma.project.update({
+      where: {
+        projectId,
+        userId,
+      },
+      data: {
+        title: input.title.trim(),
+        description: input.description.trim(),
+        startDate: input.startDate ? new Date(input.startDate) : null,
+        endDate: input.endDate ? new Date(input.endDate) : null,
+        repoUrl: input.githubUrl || null,
+      },
+    });
+
+    return {
+      id: asProjectId(project.projectId),
+      title: project.title,
+      duration: formatDuration(project.startDate, project.endDate),
+      description: project.description ?? "",
+      githubUrl: project.repoUrl ?? undefined,
+    };
+  }
+
+  async deleteProject(
+    userId: VaultBackendUserId,
+    projectId: string,
+  ): Promise<boolean> {
+    await prisma.project.delete({
+      where: {
+        projectId,
+        userId,
+      },
+    });
+    return true;
+  }
+
+  async updateSkill(
+    userId: VaultBackendUserId,
+    skillId: string,
+    input: { category: string; name: string },
+  ): Promise<VaultSkill> {
+    // Check if skill is linked to user
+    const userSkill = await prisma.userSkill.findUnique({
+      where: {
+        userId_skillId: {
+          userId,
+          skillId,
+        },
+      },
+    });
+
+    if (!userSkill) {
+      throw new Error("Skill not found for user");
+    }
+
+    // Upsert new skill
+    const newSkill = await prisma.skill.upsert({
+      where: { name: input.name.trim() },
+      update: { category: input.category.trim() },
+      create: { name: input.name.trim(), category: input.category.trim() },
+    });
+
+    if (newSkill.skillId !== skillId) {
+      // Re-link to new skill and delete old link
+      await prisma.userSkill.delete({
+        where: {
+          userId_skillId: { userId, skillId },
+        },
+      });
+
+      await prisma.userSkill.upsert({
+        where: {
+          userId_skillId: { userId, skillId: newSkill.skillId },
+        },
+        update: {},
+        create: {
+          userId,
+          skillId: newSkill.skillId,
+          proficiencyLevel: "Intermediate",
+        },
+      });
+    }
+
+    return {
+      id: asSkillId(newSkill.skillId),
+      name: newSkill.name,
+      category: newSkill.category,
+    };
+  }
+
+  async deleteSkill(
+    userId: VaultBackendUserId,
+    skillId: string,
+  ): Promise<boolean> {
+    await prisma.userSkill.delete({
+      where: {
+        userId_skillId: {
+          userId,
+          skillId,
+        },
+      },
+    });
+    return true;
+  }
+
+  async createExperience(userId: VaultBackendUserId, input: import("@uaps/shared/resume-builder").NewExperienceDraft): Promise<import("@uaps/shared/resume-builder").VaultExperience> {
+    const experience = await prisma.experience.create({
+      data: {
+        userId,
+        companyName: input.company.trim(),
+        role: input.role.trim(),
+        startDate: input.startDate ? new Date(input.startDate) : null,
+        endDate: input.endDate ? new Date(input.endDate) : null,
+        description: input.responsibilities.trim(),
+        isActive: true,
+      },
+    });
+    return {
+      id: asExperienceId(experience.experienceId),
+      company: experience.companyName,
+      role: experience.role,
+      duration: formatDuration(experience.startDate, experience.endDate),
+      responsibilities: experience.description ?? "",
+    };
+  }
+
+  async updateExperience(userId: VaultBackendUserId, experienceId: string, input: import("@uaps/shared/resume-builder").NewExperienceDraft): Promise<import("@uaps/shared/resume-builder").VaultExperience> {
+    const experience = await prisma.experience.update({
+      where: { experienceId, userId },
+      data: {
+        companyName: input.company.trim(),
+        role: input.role.trim(),
+        startDate: input.startDate ? new Date(input.startDate) : null,
+        endDate: input.endDate ? new Date(input.endDate) : null,
+        description: input.responsibilities.trim(),
+      },
+    });
+    return {
+      id: asExperienceId(experience.experienceId),
+      company: experience.companyName,
+      role: experience.role,
+      duration: formatDuration(experience.startDate, experience.endDate),
+      responsibilities: experience.description ?? "",
+    };
+  }
+
+  async deleteExperience(userId: VaultBackendUserId, experienceId: string): Promise<boolean> {
+    await prisma.experience.delete({ where: { experienceId, userId } });
+    return true;
+  }
+
+  async createCertificate(userId: VaultBackendUserId, input: import("@uaps/shared/resume-builder").NewCertificateDraft): Promise<import("@uaps/shared/resume-builder").VaultCertificate> {
+    const certificate = await prisma.certificate.create({
+      data: {
+        userId,
+        name: input.name.trim(),
+        year: input.year.trim(),
+        isActive: true,
+      },
+    });
+    return {
+      id: asCertificateId(certificate.certificateId),
+      name: certificate.name,
+      year: certificate.year ?? "",
+    };
+  }
+
+  async updateCertificate(userId: VaultBackendUserId, certificateId: string, input: import("@uaps/shared/resume-builder").NewCertificateDraft): Promise<import("@uaps/shared/resume-builder").VaultCertificate> {
+    const certificate = await prisma.certificate.update({
+      where: { certificateId, userId },
+      data: {
+        name: input.name.trim(),
+        year: input.year.trim(),
+      },
+    });
+    return {
+      id: asCertificateId(certificate.certificateId),
+      name: certificate.name,
+      year: certificate.year ?? "",
+    };
+  }
+
+  async deleteCertificate(userId: VaultBackendUserId, certificateId: string): Promise<boolean> {
+    await prisma.certificate.delete({ where: { certificateId, userId } });
+    return true;
+  }
+
+  async createAward(userId: VaultBackendUserId, input: import("@uaps/shared/resume-builder").NewAwardDraft): Promise<import("@uaps/shared/resume-builder").VaultAward> {
+    const award = await prisma.award.create({
+      data: {
+        userId,
+        name: input.name.trim(),
+        description: input.desc.trim(),
+        isActive: true,
+      },
+    });
+    return {
+      id: asAwardId(award.awardId),
+      name: award.name,
+      desc: award.description ?? "",
+    };
+  }
+
+  async updateAward(userId: VaultBackendUserId, awardId: string, input: import("@uaps/shared/resume-builder").NewAwardDraft): Promise<import("@uaps/shared/resume-builder").VaultAward> {
+    const award = await prisma.award.update({
+      where: { awardId, userId },
+      data: {
+        name: input.name.trim(),
+        description: input.desc.trim(),
+      },
+    });
+    return {
+      id: asAwardId(award.awardId),
+      name: award.name,
+      desc: award.description ?? "",
+    };
+  }
+
+  async deleteAward(userId: VaultBackendUserId, awardId: string): Promise<boolean> {
+    await prisma.award.delete({ where: { awardId, userId } });
+    return true;
   }
 
   async saveResume(
@@ -443,6 +681,83 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       status,
       config: existingResume.config,
     });
+  }
+
+  async getPublicResumes(): Promise<SavedResume[]> {
+    const resumes = await prisma.resume.findMany({
+      where: { visibility: "public" },
+      include: {
+        resumeBasic: true,
+        resumeExperiences: true,
+        resumeCertificates: true,
+        resumeAwards: true,
+        resumeProjects: true,
+        resumeSkills: true,
+        user: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 50,
+    });
+
+    const result: SavedResume[] = [];
+    for (const resume of resumes) {
+      const vault = await this.loadVaultData(resume.userId);
+      const filteredVault: VaultData = {
+        basicInfo: vault.basicInfo,
+        skills: vault.skills.filter(s => resume.resumeSkills.some(rs => rs.skillId === s.id)),
+        projects: vault.projects.filter(p => resume.resumeProjects.some(rp => rp.projectId === p.id)),
+        experience: vault.experience.filter(e => resume.resumeExperiences.some(re => re.experienceId === e.id)),
+        certificates: vault.certificates.filter(c => resume.resumeCertificates.some(rc => rc.certificateId === c.id)),
+        awards: vault.awards.filter(a => resume.resumeAwards.some(ra => ra.awardId === a.id)),
+      };
+
+      const savedResume = toSavedResume({
+        resumeId: resume.resumeId,
+        title: resume.versionName,
+        targetJobTitle: resume.targetJobTitle,
+        targetCompany: resume.targetCompany,
+        summary: resume.resumeBasic?.summary,
+        status: resume.status,
+        updatedAt: resume.updatedAt,
+        projectIds: resume.resumeProjects.map(
+          (project: ResumeProject) => project.projectId,
+        ),
+        skillIds: resume.resumeSkills.map((skill: ResumeSkill) => skill.skillId),
+        experienceIds: resume.resumeExperiences.map(
+          (experience: ResumeExperience) => experience.experienceId,
+        ),
+        certificateIds: resume.resumeCertificates.map(
+          (certificate: ResumeCertificate) => certificate.certificateId,
+        ),
+        awardIds: resume.resumeAwards.map((award: ResumeAward) => award.awardId),
+        visibility: resume.visibility,
+        authorName: resume.user?.name,
+        authorAvatarUrl: resume.user?.avatarUrl || undefined,
+      });
+
+      savedResume.vaultData = filteredVault;
+      result.push(savedResume);
+    }
+
+    return result;
+  }
+
+  async updateResumeVisibility(
+    userId: VaultBackendUserId,
+    resumeId: ResumeId,
+    visibility: string,
+  ): Promise<SavedResume | null> {
+    const existingResume = await this.getSavedResumeById(userId, resumeId);
+    if (!existingResume) return null;
+
+    await prisma.resume.update({
+      where: { resumeId: String(resumeId) },
+      data: { visibility },
+    });
+
+    return this.getSavedResumeById(userId, resumeId);
   }
 
   private async setResumeComposition(
