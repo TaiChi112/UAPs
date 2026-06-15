@@ -2,6 +2,9 @@ import {
   asProjectId,
   asResumeId,
   asSkillId,
+  asExperienceId,
+  asCertificateId,
+  asAwardId,
   type CreateSkillInput,
   type FeatureResumeStatus,
   type NewProjectDraft,
@@ -12,6 +15,17 @@ import {
   type VaultProject,
   type VaultRepository,
   type VaultSkill,
+  type ProjectId,
+  type SkillId,
+  type ExperienceId,
+  type CertificateId,
+  type AwardId,
+  type NewExperienceDraft,
+  type NewCertificateDraft,
+  type NewAwardDraft,
+  type VaultExperience,
+  type VaultCertificate,
+  type VaultAward,
 } from "@uaps/shared/resume-builder";
 
 import {
@@ -75,8 +89,9 @@ export class MockVaultRepository implements VaultRepository {
     const project: VaultProject = {
       id: asProjectId(`p-${this.now()}`),
       title: input.title.trim(),
-      role: input.role.trim(),
+      duration: `${input.startDate} - ${input.endDate}`,
       description: input.description.trim(),
+      githubUrl: input.githubUrl?.trim() ?? "",
     };
 
     snapshot.vault.projects.push(project);
@@ -92,6 +107,7 @@ export class MockVaultRepository implements VaultRepository {
       title: input.title,
       date: input.date,
       status: input.status,
+      visibility: "private",
       config: {
         ...input.config,
         selectedSkills: [...input.config.selectedSkills],
@@ -114,6 +130,162 @@ export class MockVaultRepository implements VaultRepository {
     this.writeSnapshot(snapshot);
 
     return cloneSavedResume(resume);
+  }
+
+  async updateProject(projectId: ProjectId, input: NewProjectDraft): Promise<VaultProject> {
+    const snapshot = this.readSnapshot();
+    const projectIndex = snapshot.vault.projects.findIndex((p) => p.id === projectId);
+    
+    if (projectIndex === -1) throw new Error("Project not found");
+
+    const updatedProject: VaultProject = {
+      ...snapshot.vault.projects[projectIndex],
+      ...input,
+      duration: `${input.startDate} - ${input.endDate}`,
+      githubUrl: input.githubUrl?.trim() ?? "",
+    };
+
+    snapshot.vault.projects[projectIndex] = updatedProject;
+    this.writeSnapshot(snapshot);
+    return updatedProject;
+  }
+
+  async deleteProject(projectId: ProjectId): Promise<boolean> {
+    const snapshot = this.readSnapshot();
+    const prevLength = snapshot.vault.projects.length;
+    snapshot.vault.projects = snapshot.vault.projects.filter((p) => p.id !== projectId);
+    this.writeSnapshot(snapshot);
+    return snapshot.vault.projects.length < prevLength;
+  }
+
+  async createExperience(input: NewExperienceDraft): Promise<VaultExperience> {
+    const snapshot = this.readSnapshot();
+    const exp: VaultExperience = {
+      id: asExperienceId(`e-${this.now()}`),
+      company: input.company.trim(),
+      role: input.role.trim(),
+      duration: `${input.startDate} - ${input.endDate}`,
+      responsibilities: input.responsibilities.trim(),
+    };
+    snapshot.vault.experience.push(exp);
+    this.writeSnapshot(snapshot);
+    return { ...exp };
+  }
+
+  async updateExperience(id: ExperienceId, input: NewExperienceDraft): Promise<VaultExperience> {
+    const snapshot = this.readSnapshot();
+    const idx = snapshot.vault.experience.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("Experience not found");
+    const updated = {
+      ...snapshot.vault.experience[idx],
+      company: input.company.trim(),
+      role: input.role.trim(),
+      duration: `${input.startDate} - ${input.endDate}`,
+      responsibilities: input.responsibilities.trim(),
+    };
+    snapshot.vault.experience[idx] = updated;
+    this.writeSnapshot(snapshot);
+    return updated;
+  }
+
+  async deleteExperience(id: ExperienceId): Promise<boolean> {
+    const snapshot = this.readSnapshot();
+    const prevLen = snapshot.vault.experience.length;
+    snapshot.vault.experience = snapshot.vault.experience.filter((e) => e.id !== id);
+    this.writeSnapshot(snapshot);
+    return snapshot.vault.experience.length < prevLen;
+  }
+
+  async createCertificate(input: NewCertificateDraft): Promise<VaultCertificate> {
+    const snapshot = this.readSnapshot();
+    const cert: VaultCertificate = {
+      id: asCertificateId(`c-${this.now()}`),
+      name: input.name.trim(),
+      year: input.year.trim(),
+    };
+    snapshot.vault.certificates.push(cert);
+    this.writeSnapshot(snapshot);
+    return { ...cert };
+  }
+
+  async updateCertificate(id: CertificateId, input: NewCertificateDraft): Promise<VaultCertificate> {
+    const snapshot = this.readSnapshot();
+    const idx = snapshot.vault.certificates.findIndex((c) => c.id === id);
+    if (idx === -1) throw new Error("Certificate not found");
+    const updated = {
+      ...snapshot.vault.certificates[idx],
+      name: input.name.trim(),
+      year: input.year.trim(),
+    };
+    snapshot.vault.certificates[idx] = updated;
+    this.writeSnapshot(snapshot);
+    return updated;
+  }
+
+  async deleteCertificate(id: CertificateId): Promise<boolean> {
+    const snapshot = this.readSnapshot();
+    const prevLen = snapshot.vault.certificates.length;
+    snapshot.vault.certificates = snapshot.vault.certificates.filter((c) => c.id !== id);
+    this.writeSnapshot(snapshot);
+    return snapshot.vault.certificates.length < prevLen;
+  }
+
+  async createAward(input: NewAwardDraft): Promise<VaultAward> {
+    const snapshot = this.readSnapshot();
+    const award: VaultAward = {
+      id: asAwardId(`a-${this.now()}`),
+      name: input.name.trim(),
+      desc: input.desc.trim(),
+    };
+    snapshot.vault.awards.push(award);
+    this.writeSnapshot(snapshot);
+    return { ...award };
+  }
+
+  async updateAward(id: AwardId, input: NewAwardDraft): Promise<VaultAward> {
+    const snapshot = this.readSnapshot();
+    const idx = snapshot.vault.awards.findIndex((a) => a.id === id);
+    if (idx === -1) throw new Error("Award not found");
+    const updated = {
+      ...snapshot.vault.awards[idx],
+      name: input.name.trim(),
+      desc: input.desc.trim(),
+    };
+    snapshot.vault.awards[idx] = updated;
+    this.writeSnapshot(snapshot);
+    return updated;
+  }
+
+  async deleteAward(id: AwardId): Promise<boolean> {
+    const snapshot = this.readSnapshot();
+    const prevLen = snapshot.vault.awards.length;
+    snapshot.vault.awards = snapshot.vault.awards.filter((a) => a.id !== id);
+    this.writeSnapshot(snapshot);
+    return snapshot.vault.awards.length < prevLen;
+  }
+
+  async updateSkill(skillId: SkillId, input: CreateSkillInput): Promise<VaultSkill> {
+    const snapshot = this.readSnapshot();
+    const skillIndex = snapshot.vault.skills.findIndex((s) => s.id === skillId);
+    
+    if (skillIndex === -1) throw new Error("Skill not found");
+
+    const updatedSkill: VaultSkill = {
+      ...snapshot.vault.skills[skillIndex],
+      ...input,
+    };
+
+    snapshot.vault.skills[skillIndex] = updatedSkill;
+    this.writeSnapshot(snapshot);
+    return updatedSkill;
+  }
+
+  async deleteSkill(skillId: SkillId): Promise<boolean> {
+    const snapshot = this.readSnapshot();
+    const prevLength = snapshot.vault.skills.length;
+    snapshot.vault.skills = snapshot.vault.skills.filter((s) => s.id !== skillId);
+    this.writeSnapshot(snapshot);
+    return snapshot.vault.skills.length < prevLength;
   }
 
   async duplicateResume(
@@ -174,6 +346,30 @@ export class MockVaultRepository implements VaultRepository {
     this.writeSnapshot(snapshot);
 
     return cloneSavedResume(resume);
+  }
+
+  async updateResumeVisibility(
+    resumeId: ResumeId,
+    visibility: string,
+  ): Promise<SavedResume | null> {
+    const snapshot = this.readSnapshot();
+    const resume = snapshot.savedResumes.find((item) => item.id === resumeId);
+
+    if (!resume) {
+      return null;
+    }
+
+    (resume as any).visibility = visibility;
+    this.writeSnapshot(snapshot);
+
+    return cloneSavedResume(resume);
+  }
+
+  async getPublicResumes(): Promise<SavedResume[]> {
+    const snapshot = this.readSnapshot();
+    return snapshot.savedResumes
+      .filter((item) => (item as any).visibility === "public")
+      .map(cloneSavedResume);
   }
 
   private readSnapshot(): ResumeBuilderSnapshot {
