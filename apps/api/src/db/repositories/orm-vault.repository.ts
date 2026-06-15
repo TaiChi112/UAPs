@@ -206,6 +206,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         visibility: resume.visibility,
         authorName: resume.user?.name,
         authorAvatarUrl: resume.user?.avatarUrl || undefined,
+        sectionOrder: resume.sectionOrder,
       }),
     );
   }
@@ -403,17 +404,16 @@ export class OrmVaultRepository implements IVaultBackendRepository {
     const experience = await prisma.experience.create({
       data: {
         userId,
-        companyName: input.company.trim(),
+        organization: input.company.trim(),
         role: input.role.trim(),
         startDate: input.startDate ? new Date(input.startDate) : null,
         endDate: input.endDate ? new Date(input.endDate) : null,
         description: input.responsibilities.trim(),
-        isActive: true,
       },
     });
     return {
       id: asExperienceId(experience.experienceId),
-      company: experience.companyName,
+      company: experience.organization,
       role: experience.role,
       duration: formatDuration(experience.startDate, experience.endDate),
       responsibilities: experience.description ?? "",
@@ -424,7 +424,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
     const experience = await prisma.experience.update({
       where: { experienceId, userId },
       data: {
-        companyName: input.company.trim(),
+        organization: input.company.trim(),
         role: input.role.trim(),
         startDate: input.startDate ? new Date(input.startDate) : null,
         endDate: input.endDate ? new Date(input.endDate) : null,
@@ -433,7 +433,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
     });
     return {
       id: asExperienceId(experience.experienceId),
-      company: experience.companyName,
+      company: experience.organization,
       role: experience.role,
       duration: formatDuration(experience.startDate, experience.endDate),
       responsibilities: experience.description ?? "",
@@ -451,7 +451,6 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         userId,
         name: input.name.trim(),
         year: input.year.trim(),
-        isActive: true,
       },
     });
     return {
@@ -487,7 +486,6 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         userId,
         name: input.name.trim(),
         description: input.desc.trim(),
-        isActive: true,
       },
     });
     return {
@@ -565,6 +563,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
                   targetCompany: input.config.targetCompany || null,
                   status: persistedStatus,
                   visibility: "private",
+                  sectionOrder: input.config.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"],
                 },
               });
             })()
@@ -577,6 +576,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
                 visibility: "private",
                 isActive: false,
                 status: persistedStatus,
+                sectionOrder: input.config.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"],
               },
             });
 
@@ -735,6 +735,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         visibility: resume.visibility,
         authorName: resume.user?.name,
         authorAvatarUrl: resume.user?.avatarUrl || undefined,
+        sectionOrder: resume.sectionOrder,
       });
 
       savedResume.vaultData = filteredVault;
