@@ -123,23 +123,68 @@ export default function ResumeBuilderManualPage() {
         dispatch({ type: "editor/setNewProject", payload: { draft } })
       }
       onAddProject={handleAddProject}
+      showExperienceForm={state.editor.showExperienceForm}
+      newExperience={state.editor.newExperience}
       onToggleExperience={(experienceId: ExperienceId) =>
         dispatch({
           type: "editor/toggleExperience",
           payload: { experienceId },
         })
       }
+      onShowExperienceForm={() =>
+        dispatch({ type: "editor/setExperienceFormOpen", payload: { open: true } })
+      }
+      onHideExperienceForm={() =>
+        dispatch({ type: "editor/setExperienceFormOpen", payload: { open: false } })
+      }
+      onExperienceDraftChange={(draft) =>
+        dispatch({ type: "editor/setNewExperience", payload: { draft } })
+      }
+      onAddExperience={async (event) => {
+        event.preventDefault();
+        await actions.addExperienceToVault(state.editor.newExperience);
+      }}
+      showCertificateForm={state.editor.showCertificateForm}
+      newCertificate={state.editor.newCertificate}
       onToggleCert={(certificateId: CertificateId) =>
         dispatch({
           type: "editor/toggleCertificate",
           payload: { certificateId },
         })
       }
+      onShowCertificateForm={() =>
+        dispatch({ type: "editor/setCertificateFormOpen", payload: { open: true } })
+      }
+      onHideCertificateForm={() =>
+        dispatch({ type: "editor/setCertificateFormOpen", payload: { open: false } })
+      }
+      onCertificateDraftChange={(draft) =>
+        dispatch({ type: "editor/setNewCertificate", payload: { draft } })
+      }
+      onAddCertificate={async (event) => {
+        event.preventDefault();
+        await actions.addCertificateToVault(state.editor.newCertificate);
+      }}
+      showAwardForm={state.editor.showAwardForm}
+      newAward={state.editor.newAward}
       onToggleAward={(awardId: AwardId) =>
-        dispatch({
-          type: "editor/toggleAward",
-          payload: { awardId },
-        })
+        dispatch({ type: "editor/toggleAward", payload: { awardId } })
+      }
+      onShowAwardForm={() =>
+        dispatch({ type: "editor/setAwardFormOpen", payload: { open: true } })
+      }
+      onHideAwardForm={() =>
+        dispatch({ type: "editor/setAwardFormOpen", payload: { open: false } })
+      }
+      onAwardDraftChange={(draft) =>
+        dispatch({ type: "editor/setNewAward", payload: { draft } })
+      }
+      onAddAward={async (event) => {
+        event.preventDefault();
+        await actions.addAwardToVault(state.editor.newAward);
+      }}
+      onSectionOrderChange={(order: string[]) =>
+        dispatch({ type: "editor/setSectionOrder", payload: { order } })
       }
     />
   );
