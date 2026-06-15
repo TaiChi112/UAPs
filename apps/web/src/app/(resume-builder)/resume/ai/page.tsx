@@ -41,7 +41,10 @@ export default function ResumeBuilderAiPage() {
 
     await actions.saveResume({
       resumeId: existingResume?.id,
-      title: buildResumeTitle(state.editor.resumeConfig, state.savedResumes.length),
+      title: buildResumeTitle(
+        state.editor.resumeConfig,
+        state.savedResumes.length,
+      ),
       date: existingResume?.date ?? formatResumeDate(),
       status: existingResume?.status ?? "Draft",
       config: state.editor.resumeConfig,

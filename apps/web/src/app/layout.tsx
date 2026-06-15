@@ -26,17 +26,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${primaryFont.variable} ${monoFont.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${primaryFont.variable} ${monoFont.variable} h-full antialiased`}
+    >
       <body className="min-h-full">
         {/* <div className="page-shell"> */}
-          {/* <header className="topbar"> */}
-            {/* <div> */}
-              {/* <p className="eyebrow">UAPS</p> */}
-              {/* <h1 className="brand">Universal Academic Portfolio System</h1> */}
-            {/* </div> */}
-            {/* <RoleSwitchNav /> */}
-          {/* </header> */}
-          <main className="content-shell">{children}</main>
+        {/* <header className="topbar"> */}
+        {/* <div> */}
+        {/* <p className="eyebrow">UAPS</p> */}
+        {/* <h1 className="brand">Universal Academic Portfolio System</h1> */}
+        {/* </div> */}
+        {/* <RoleSwitchNav /> */}
+        {/* </header> */}
+        <main className="content-shell">{children}</main>
         {/* </div> */}
       </body>
     </html>
