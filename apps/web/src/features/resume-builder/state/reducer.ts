@@ -202,12 +202,14 @@ export const resumeBuilderReducer = (
         },
       };
 
-    case "editor/addSkillToVault":
+    case "editor/addSkillToVault": {
+      const existingDbSkill = state.db.skills.find(s => s.id === action.payload.skillId);
+      const isAlreadySelected = state.editor.resumeConfig.selectedSkills.includes(action.payload.skillId);
       return {
         ...state,
         db: {
           ...state.db,
-          skills: [
+          skills: existingDbSkill ? state.db.skills : [
             ...state.db.skills,
             {
               id: action.payload.skillId,
@@ -221,13 +223,13 @@ export const resumeBuilderReducer = (
           newSkill: "",
           resumeConfig: {
             ...state.editor.resumeConfig,
-            selectedSkills: [
-              ...state.editor.resumeConfig.selectedSkills,
-              action.payload.skillId,
-            ],
+            selectedSkills: isAlreadySelected 
+              ? state.editor.resumeConfig.selectedSkills 
+              : [...state.editor.resumeConfig.selectedSkills, action.payload.skillId],
           },
         },
       };
+    }
 
     case "editor/updateSkillInVault":
       return {
@@ -751,12 +753,14 @@ export const resumeBuilderReducer = (
         },
       };
 
-    case "ai/fixMissingSkill":
+    case "ai/fixMissingSkill": {
+      const existingDbSkill = state.db.skills.find(s => s.id === action.payload.skillId);
+      const isAlreadySelected = state.editor.resumeConfig.selectedSkills.includes(action.payload.skillId);
       return {
         ...state,
         db: {
           ...state.db,
-          skills: [
+          skills: existingDbSkill ? state.db.skills : [
             ...state.db.skills,
             {
               id: action.payload.skillId,
@@ -769,10 +773,9 @@ export const resumeBuilderReducer = (
           ...state.editor,
           resumeConfig: {
             ...state.editor.resumeConfig,
-            selectedSkills: [
-              ...state.editor.resumeConfig.selectedSkills,
-              action.payload.skillId,
-            ],
+            selectedSkills: isAlreadySelected 
+              ? state.editor.resumeConfig.selectedSkills 
+              : [...state.editor.resumeConfig.selectedSkills, action.payload.skillId],
           },
         },
         ai: {
@@ -785,6 +788,7 @@ export const resumeBuilderReducer = (
           },
         },
       };
+    }
 
     case "ui/showToast":
       return {

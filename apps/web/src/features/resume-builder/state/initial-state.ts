@@ -19,11 +19,11 @@ import {
 
 export const cloneResumeConfig = (config: ResumeConfig): ResumeConfig => ({
   ...config,
-  selectedSkills: [...config.selectedSkills],
-  selectedProjects: [...config.selectedProjects],
-  selectedExperience: [...config.selectedExperience],
-  selectedCerts: [...config.selectedCerts],
-  selectedAwards: [...config.selectedAwards],
+  selectedSkills: Array.from(new Set(config.selectedSkills)),
+  selectedProjects: Array.from(new Set(config.selectedProjects)),
+  selectedExperience: Array.from(new Set(config.selectedExperience)),
+  selectedCerts: Array.from(new Set(config.selectedCerts)),
+  selectedAwards: Array.from(new Set(config.selectedAwards)),
 });
 
 export const cloneSavedResume = (resume: SavedResume): SavedResume => ({
@@ -33,11 +33,11 @@ export const cloneSavedResume = (resume: SavedResume): SavedResume => ({
 
 export const cloneVaultData = (db: VaultData): VaultData => ({
   basicInfo: { ...db.basicInfo },
-  skills: db.skills.map((skill) => ({ ...skill })),
-  projects: db.projects.map((project) => ({ ...project })),
-  experience: db.experience.map((experience) => ({ ...experience })),
-  certificates: db.certificates.map((certificate) => ({ ...certificate })),
-  awards: db.awards.map((award) => ({ ...award })),
+  skills: Array.from(new Map(db.skills.map(s => [s.id, s])).values()).map((skill) => ({ ...skill })),
+  projects: Array.from(new Map(db.projects.map(p => [p.id, p])).values()).map((project) => ({ ...project })),
+  experience: Array.from(new Map(db.experience.map(e => [e.id, e])).values()).map((experience) => ({ ...experience })),
+  certificates: Array.from(new Map(db.certificates.map(c => [c.id, c])).values()).map((certificate) => ({ ...certificate })),
+  awards: Array.from(new Map(db.awards.map(a => [a.id, a])).values()).map((award) => ({ ...award })),
 });
 
 export const createInitialNewProjectDraft = () => ({
