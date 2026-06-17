@@ -9,7 +9,7 @@ import type {
   VaultData,
 } from "@uaps/shared/resume-builder";
 import { useResumeBuilderActions } from "../../state/use-resume-builder-actions";
-import { useClickOutsideWithAutoSave } from "../../../../hooks/use-click-outside-auto-save";
+
 
 export interface CertificatesSectionProps {
   certificates: VaultData["certificates"];
@@ -39,17 +39,6 @@ export function CertificatesSection({
   const [editDraft, setEditDraft] = useState<NewCertificateDraft>({
     name: "",
     year: "",
-  });
-  const handleAddCertificateInternal = () => {
-    onAddCertificate({ preventDefault: () => {} } as FormEvent<HTMLFormElement>);
-  };
-
-  const addFormRef = useRef<HTMLFormElement>(null);
-  useClickOutsideWithAutoSave({
-    formRef: addFormRef,
-    onClose: onHideCertificateForm,
-    onSave: handleAddCertificateInternal,
-    shouldAutoSave: showCertificateForm && !!newCertificate.name.trim(),
   });
 
   const handleEditClick = (e: React.MouseEvent, cert: VaultData["certificates"][0]) => {
@@ -189,7 +178,6 @@ export function CertificatesSection({
 
         {showCertificateForm ? (
           <form
-            ref={addFormRef}
             onSubmit={onAddCertificate}
             className="bg-slate-50 p-4 border border-blue-200 rounded-lg space-y-3 relative"
           >

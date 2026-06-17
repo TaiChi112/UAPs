@@ -9,7 +9,7 @@ import type {
   VaultData,
 } from "@uaps/shared/resume-builder";
 import { useResumeBuilderActions } from "../../state/use-resume-builder-actions";
-import { useClickOutsideWithAutoSave } from "../../../../hooks/use-click-outside-auto-save";
+
 
 export interface ExperienceSectionProps {
   experience: VaultData["experience"];
@@ -42,17 +42,6 @@ export function ExperienceSection({
     startDate: "",
     endDate: "",
     responsibilities: "",
-  });
-  const handleAddExperienceInternal = () => {
-    onAddExperience({ preventDefault: () => {} } as FormEvent<HTMLFormElement>);
-  };
-
-  const addFormRef = useRef<HTMLFormElement>(null);
-  useClickOutsideWithAutoSave({
-    formRef: addFormRef,
-    onClose: onHideExperienceForm,
-    onSave: handleAddExperienceInternal,
-    shouldAutoSave: showExperienceForm && !!newExperience.role.trim(),
   });
 
   const handleEditClick = (e: React.MouseEvent, exp: VaultData["experience"][0]) => {
@@ -227,7 +216,6 @@ export function ExperienceSection({
 
         {showExperienceForm ? (
           <form
-            ref={addFormRef}
             onSubmit={onAddExperience}
             className="bg-slate-50 p-4 border border-blue-200 rounded-lg space-y-3 relative"
           >
