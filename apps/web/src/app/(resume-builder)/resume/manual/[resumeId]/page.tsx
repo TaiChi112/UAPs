@@ -69,6 +69,35 @@ export default function ResumeBuilderEditResumePage() {
     state.editor.mode,
   ]);
 
+  // Auto-save effect
+  useEffect(() => {
+    if (!isHydrated || !savedResume || state.editor.mode !== "edit" || state.editor.editingResumeId !== routeResumeId) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      await actions.saveResume({
+        resumeId: savedResume.id,
+        title: buildResumeTitle(state.editor.resumeConfig, state.savedResumes.length),
+        date: savedResume.date,
+        status: savedResume.status,
+        config: state.editor.resumeConfig,
+      });
+      // Optionally dispatch a silent toast or just rely on the background save
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timer);
+  }, [
+    state.editor.resumeConfig,
+    isHydrated,
+    savedResume,
+    state.editor.mode,
+    state.editor.editingResumeId,
+    routeResumeId,
+    state.savedResumes.length,
+    actions,
+  ]);
+
   if (!isHydrated || !savedResume) {
     return null;
   }
@@ -93,7 +122,7 @@ export default function ResumeBuilderEditResumePage() {
       type: "ui/showToast",
       payload: { message: "Resume updated successfully!" },
     });
-    router.push("/");
+    router.push("/vault");
   };
 
   const handleAddSkill = async (event: FormEvent<HTMLFormElement>) => {
@@ -114,7 +143,7 @@ export default function ResumeBuilderEditResumePage() {
       newSkill={state.editor.newSkill}
       showProjectForm={state.editor.showProjectForm}
       newProject={state.editor.newProject}
-      onCancel={() => router.push("/")}
+      onCancel={() => router.push("/vault")}
       onSave={handleSave}
       onTargetRoleChange={(value) =>
         dispatch({ type: "editor/setTargetRole", payload: { value } })
