@@ -9,6 +9,7 @@ import { downloadResumeBuilderPdf } from "@/lib/api";
 import { useResumeBuilder } from "@/features/resume-builder/state/use-resume-builder";
 
 import { Calendar, Eye, FileText, User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // We create a sophisticated card component for public resumes
 function PublicResumeCard({
@@ -61,7 +62,8 @@ export default function PublicFeedPage() {
   const [loading, setLoading] = useState(true);
   const [previewResume, setPreviewResume] = useState<SavedResume | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const { state } = useResumeBuilder(); // For db context for preview
+  const { state, dispatch } = useResumeBuilder(); // For db context for preview
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPublicResumes = async () => {
@@ -149,7 +151,11 @@ export default function PublicFeedPage() {
             // Check if it's the user's own resume
             const isOwner = state.savedResumes.some((r) => r.id === resume.id);
             if (isOwner) {
-              window.location.href = "/vault";
+              dispatch({
+                type: "editor/loadResumeForEdit",
+                payload: { resumeId: resume.id },
+              });
+              router.push(`/resume/manual/${resume.id}`);
             } else {
               alert("You cannot edit a resume that does not belong to you.");
             }

@@ -54,7 +54,7 @@ export default function ResumeBuilderAiPage() {
       type: "ui/showToast",
       payload: { message: "New resume saved to Vault!" },
     });
-    router.push("/");
+    router.push("/vault");
   };
 
   return (
@@ -66,7 +66,7 @@ export default function ResumeBuilderAiPage() {
       jobDescription={state.ai.jobDescription}
       emptyConfig={EMPTY_RESUME_CONFIG}
       resumeConfig={state.editor.resumeConfig}
-      onBack={() => router.push("/")}
+      onBack={() => router.push("/vault")}
       onSwitchToManual={() => router.push("/resume/manual")}
       onSave={handleSave}
       onJobDescriptionChange={(value) =>
