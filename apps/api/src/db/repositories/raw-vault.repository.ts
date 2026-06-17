@@ -614,7 +614,6 @@ export class RawVaultRepository implements IVaultBackendRepository {
                 target_job_title = $2,
                 target_company = $3,
                 status = $4,
-                visibility = 'private',
                 updated_at = CURRENT_TIMESTAMP
               WHERE user_id = $5 AND resume_id = $6
               RETURNING resume_id, version_name, target_job_title, target_company, status, updated_at, NULL::text AS summary

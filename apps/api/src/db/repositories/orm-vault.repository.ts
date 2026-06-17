@@ -568,7 +568,6 @@ export class OrmVaultRepository implements IVaultBackendRepository {
                   targetJobTitle: input.config.targetRole || null,
                   targetCompany: input.config.targetCompany || null,
                   status: persistedStatus,
-                  visibility: "private",
                   sectionOrder: input.config.sectionOrder || ["skills", "projects", "experience", "certificates", "awards"],
                 },
               });
