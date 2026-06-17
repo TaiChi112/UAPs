@@ -40,6 +40,7 @@ export function ProjectsSection({
     description: "",
     startDate: "",
     endDate: "",
+    githubUrl: "",
   });
 
   const handleEditClick = (e: React.MouseEvent, project: VaultData["projects"][0]) => {
@@ -51,6 +52,7 @@ export function ProjectsSection({
       description: project.description || "",
       startDate,
       endDate,
+      githubUrl: project.githubUrl || "",
     });
   };
 

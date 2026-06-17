@@ -44,6 +44,12 @@ import {
   toSavedResume,
 } from "./vault-backend.utils";
 
+const parseSafeDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 type PrismaResumeCompositionClient = Prisma.TransactionClient;
 type PrismaUserSkillWithSkill = Prisma.UserSkillGetPayload<{
   include: { skill: true };
@@ -273,8 +279,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         userId,
         title: input.title.trim(),
         description: input.description.trim(),
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
+        startDate: parseSafeDate(input.startDate),
+        endDate: parseSafeDate(input.endDate),
         repoUrl: input.githubUrl || null,
         status: "Completed",
         isActive: true,
@@ -303,8 +309,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       data: {
         title: input.title.trim(),
         description: input.description.trim(),
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
+        startDate: parseSafeDate(input.startDate),
+        endDate: parseSafeDate(input.endDate),
         repoUrl: input.githubUrl || null,
       },
     });
@@ -406,8 +412,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         userId,
         organization: input.company.trim(),
         role: input.role.trim(),
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
+        startDate: parseSafeDate(input.startDate),
+        endDate: parseSafeDate(input.endDate),
         description: input.responsibilities.trim(),
       },
     });
@@ -426,8 +432,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       data: {
         organization: input.company.trim(),
         role: input.role.trim(),
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
+        startDate: parseSafeDate(input.startDate),
+        endDate: parseSafeDate(input.endDate),
         description: input.responsibilities.trim(),
       },
     });
