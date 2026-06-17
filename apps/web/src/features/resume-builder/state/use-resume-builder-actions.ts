@@ -390,7 +390,7 @@ export function useResumeBuilderActions() {
       if (updatedResume) {
         dispatch({
           type: "resume/updateVisibility",
-          payload: { resumeId, visibility: (updatedResume as any).visibility || visibility },
+          payload: { resumeId, visibility: updatedResume.visibility || visibility },
         });
       }
 
