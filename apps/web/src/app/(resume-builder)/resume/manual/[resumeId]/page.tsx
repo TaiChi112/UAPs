@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import type {
   AwardId,
@@ -69,34 +69,78 @@ export default function ResumeBuilderEditResumePage() {
     state.editor.mode,
   ]);
 
-  // Auto-save effect
+  const configRef = useRef(state.editor.resumeConfig);
+  const savedResumeRef = useRef(savedResume);
+  const actionsRef = useRef(actions);
+
   useEffect(() => {
-    if (!isHydrated || !savedResume || state.editor.mode !== "edit" || state.editor.editingResumeId !== routeResumeId) {
-      return;
+    configRef.current = state.editor.resumeConfig;
+    savedResumeRef.current = savedResume;
+    actionsRef.current = actions;
+  }, [state.editor.resumeConfig, savedResume, actions]);
+  const handleCloseAndSaveForms = async () => {
+    if (state.editor.showProjectForm) {
+      if (state.editor.newProject.title.trim()) {
+        await actions.addProjectToVault(state.editor.newProject);
+      } else {
+        dispatch({ type: "editor/setProjectFormOpen", payload: { open: false } });
+      }
     }
+    
+    if (state.editor.showExperienceForm) {
+      if (state.editor.newExperience.company.trim() || state.editor.newExperience.role.trim()) {
+        await actions.addExperienceToVault(state.editor.newExperience);
+      } else {
+        dispatch({ type: "editor/setExperienceFormOpen", payload: { open: false } });
+      }
+    }
+    
+    if (state.editor.showCertificateForm) {
+      if (state.editor.newCertificate.name.trim()) {
+        await actions.addCertificateToVault(state.editor.newCertificate);
+      } else {
+        dispatch({ type: "editor/setCertificateFormOpen", payload: { open: false } });
+      }
+    }
+    
+    if (state.editor.showAwardForm) {
+      if (state.editor.newAward.name.trim()) {
+        await actions.addAwardToVault(state.editor.newAward);
+      } else {
+        dispatch({ type: "editor/setAwardFormOpen", payload: { open: false } });
+      }
+    }
+  };
 
-    const timer = setTimeout(async () => {
-      await actions.saveResume({
-        resumeId: savedResume.id,
-        title: buildResumeTitle(state.editor.resumeConfig, state.savedResumes.length),
-        date: savedResume.date,
-        status: savedResume.status,
-        config: state.editor.resumeConfig,
-      });
-      // Optionally dispatch a silent toast or just rely on the background save
-    }, 2000); // 2 second debounce
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Do not trigger if clicking inside any form or button
+      if (target.closest('form') || target.closest('button')) {
+        return;
+      }
+      
+      // We must not await inside a synchronous event listener, but calling async function is fine
+      void handleCloseAndSaveForms();
+    };
 
-    return () => clearTimeout(timer);
+    document.addEventListener('mousedown', handleGlobalClick);
+    return () => {
+      document.removeEventListener('mousedown', handleGlobalClick);
+    };
   }, [
-    state.editor.resumeConfig,
-    isHydrated,
-    savedResume,
-    state.editor.mode,
-    state.editor.editingResumeId,
-    routeResumeId,
-    state.savedResumes.length,
+    state.editor.showProjectForm,
+    state.editor.showExperienceForm,
+    state.editor.showCertificateForm,
+    state.editor.showAwardForm,
+    state.editor.newProject,
+    state.editor.newExperience,
+    state.editor.newCertificate,
+    state.editor.newAward,
     actions,
+    dispatch,
   ]);
+
 
   if (!isHydrated || !savedResume) {
     return null;
@@ -112,7 +156,10 @@ export default function ResumeBuilderEditResumePage() {
   const handleSave = async () => {
     await actions.saveResume({
       resumeId: savedResume.id,
-      title: buildResumeTitle(state.editor.resumeConfig, state.savedResumes.length),
+      title: buildResumeTitle(
+        state.editor.resumeConfig,
+        state.savedResumes.length,
+      ),
       date: savedResume.date,
       status: savedResume.status,
       config: state.editor.resumeConfig,
@@ -129,6 +176,7 @@ export default function ResumeBuilderEditResumePage() {
     event.preventDefault();
     await actions.addSkillToVault(state.editor.newSkill);
   };
+
 
   const handleAddProject = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -164,12 +212,13 @@ export default function ResumeBuilderEditResumePage() {
       onToggleProject={(projectId: ProjectId) =>
         dispatch({ type: "editor/toggleProject", payload: { projectId } })
       }
-      onShowProjectForm={() =>
+      onShowProjectForm={async () => {
+        await handleCloseAndSaveForms();
         dispatch({
           type: "editor/setProjectFormOpen",
           payload: { open: true },
-        })
-      }
+        });
+      }}
       onHideProjectForm={() =>
         dispatch({
           type: "editor/setProjectFormOpen",
@@ -188,11 +237,18 @@ export default function ResumeBuilderEditResumePage() {
           payload: { experienceId },
         })
       }
-      onShowExperienceForm={() =>
-        dispatch({ type: "editor/setExperienceFormOpen", payload: { open: true } })
-      }
+      onShowExperienceForm={async () => {
+        await handleCloseAndSaveForms();
+        dispatch({
+          type: "editor/setExperienceFormOpen",
+          payload: { open: true },
+        });
+      }}
       onHideExperienceForm={() =>
-        dispatch({ type: "editor/setExperienceFormOpen", payload: { open: false } })
+        dispatch({
+          type: "editor/setExperienceFormOpen",
+          payload: { open: false },
+        })
       }
       onExperienceDraftChange={(draft) =>
         dispatch({ type: "editor/setNewExperience", payload: { draft } })
@@ -209,11 +265,18 @@ export default function ResumeBuilderEditResumePage() {
           payload: { certificateId },
         })
       }
-      onShowCertificateForm={() =>
-        dispatch({ type: "editor/setCertificateFormOpen", payload: { open: true } })
-      }
+      onShowCertificateForm={async () => {
+        await handleCloseAndSaveForms();
+        dispatch({
+          type: "editor/setCertificateFormOpen",
+          payload: { open: true },
+        });
+      }}
       onHideCertificateForm={() =>
-        dispatch({ type: "editor/setCertificateFormOpen", payload: { open: false } })
+        dispatch({
+          type: "editor/setCertificateFormOpen",
+          payload: { open: false },
+        })
       }
       onCertificateDraftChange={(draft) =>
         dispatch({ type: "editor/setNewCertificate", payload: { draft } })
@@ -227,9 +290,10 @@ export default function ResumeBuilderEditResumePage() {
       onToggleAward={(awardId: AwardId) =>
         dispatch({ type: "editor/toggleAward", payload: { awardId } })
       }
-      onShowAwardForm={() =>
-        dispatch({ type: "editor/setAwardFormOpen", payload: { open: true } })
-      }
+      onShowAwardForm={async () => {
+        await handleCloseAndSaveForms();
+        dispatch({ type: "editor/setAwardFormOpen", payload: { open: true } });
+      }}
       onHideAwardForm={() =>
         dispatch({ type: "editor/setAwardFormOpen", payload: { open: false } })
       }
