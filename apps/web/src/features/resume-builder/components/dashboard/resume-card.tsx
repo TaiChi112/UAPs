@@ -81,8 +81,8 @@ export function ResumeCard({
           </div>
           <div className="relative" onClick={(event) => event.stopPropagation()}>
             <select
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border outline-none appearance-none cursor-pointer pr-6 ${(resume as any).visibility === "public" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}
-              value={(resume as any).visibility || "private"}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border outline-none appearance-none cursor-pointer pr-6 ${resume.visibility === "public" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}
+              value={resume.visibility || "private"}
               onChange={(event) =>
                 onVisibilityChange(
                   resume.id,

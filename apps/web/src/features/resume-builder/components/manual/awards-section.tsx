@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useRef } from "react";
 
 import { Check, Award, Plus, X, Pencil, Trash2 } from "lucide-react";
 
@@ -9,6 +9,7 @@ import type {
   VaultData,
 } from "@uaps/shared/resume-builder";
 import { useResumeBuilderActions } from "../../state/use-resume-builder-actions";
+import { useClickOutsideWithAutoSave } from "../../../../hooks/use-click-outside-auto-save";
 
 export interface AwardsSectionProps {
   awards: VaultData["awards"];
@@ -38,6 +39,17 @@ export function AwardsSection({
   const [editDraft, setEditDraft] = useState<NewAwardDraft>({
     name: "",
     desc: "",
+  });
+  const handleAddAwardInternal = () => {
+    onAddAward({ preventDefault: () => {} } as FormEvent<HTMLFormElement>);
+  };
+
+  const addFormRef = useRef<HTMLFormElement>(null);
+  useClickOutsideWithAutoSave({
+    formRef: addFormRef,
+    onClose: onHideAwardForm,
+    onSave: handleAddAwardInternal,
+    shouldAutoSave: showAwardForm && !!newAward.name.trim(),
   });
 
   const handleEditClick = (e: React.MouseEvent, award: VaultData["awards"][0]) => {
@@ -171,6 +183,7 @@ export function AwardsSection({
 
         {showAwardForm ? (
           <form
+            ref={addFormRef}
             onSubmit={onAddAward}
             className="bg-slate-50 p-4 border border-blue-200 rounded-lg space-y-3 relative"
           >

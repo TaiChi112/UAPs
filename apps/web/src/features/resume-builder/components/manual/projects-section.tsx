@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useRef } from "react";
 
 import { Check, FileText, Plus, X, Pencil, Trash2 } from "lucide-react";
 
@@ -9,6 +9,7 @@ import type {
   VaultData,
 } from "@uaps/shared/resume-builder";
 import { useResumeBuilderActions } from "../../state/use-resume-builder-actions";
+import { useClickOutsideWithAutoSave } from "../../../../hooks/use-click-outside-auto-save";
 
 export interface ProjectsSectionProps {
   projects: VaultData["projects"];
@@ -41,6 +42,17 @@ export function ProjectsSection({
     startDate: "",
     endDate: "",
     githubUrl: "",
+  });
+  const handleAddProjectInternal = () => {
+    onAddProject({ preventDefault: () => {} } as FormEvent<HTMLFormElement>);
+  };
+
+  const addFormRef = useRef<HTMLFormElement>(null);
+  useClickOutsideWithAutoSave({
+    formRef: addFormRef,
+    onClose: onHideProjectForm,
+    onSave: handleAddProjectInternal,
+    shouldAutoSave: showProjectForm && !!newProject.title.trim(),
   });
 
   const handleEditClick = (e: React.MouseEvent, project: VaultData["projects"][0]) => {
@@ -233,6 +245,7 @@ export function ProjectsSection({
       </div>
       {showProjectForm ? (
         <form
+          ref={addFormRef}
           onSubmit={onAddProject}
           className="bg-slate-50 p-4 border border-slate-200 rounded-lg space-y-3 relative"
         >
