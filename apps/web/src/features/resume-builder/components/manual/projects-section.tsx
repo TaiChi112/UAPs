@@ -139,44 +139,35 @@ export function ProjectsSection({
                   <label className="text-xs font-medium text-slate-500">
                     Project Details (Bullet Points)
                   </label>
-                  {(typeof editDraft.description === "string" 
-                    ? [editDraft.description] 
-                    : Array.isArray(editDraft.description) ? editDraft.description : [])
-                    .map((point: string, index: number) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          type="text"
-                          className="flex-1 text-sm p-2 border rounded-md"
-                          value={point}
-                          onChange={(e) => {
-                            const newDesc = Array.isArray(editDraft.description) 
-                              ? [...editDraft.description] 
-                              : [editDraft.description || ""];
-                            newDesc[index] = e.target.value;
-                            setEditDraft({ ...editDraft, description: newDesc as any });
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="p-2 text-red-500 hover:bg-red-50 rounded"
-                          onClick={() => {
-                            const newDesc = Array.isArray(editDraft.description) 
-                              ? editDraft.description.filter((_, i) => i !== index)
-                              : [];
-                            setEditDraft({ ...editDraft, description: newDesc as any });
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                  {(editDraft.description || "").split('\n').map((point: string, index: number) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 text-sm p-2 border rounded-md"
+                        value={point}
+                        onChange={(e) => {
+                          const newDesc = (editDraft.description || "").split('\n');
+                          newDesc[index] = e.target.value;
+                          setEditDraft({ ...editDraft, description: newDesc.join('\n') });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="p-2 text-red-500 hover:bg-red-50 rounded"
+                        onClick={() => {
+                          const newDesc = (editDraft.description || "").split('\n').filter((_, i) => i !== index);
+                          setEditDraft({ ...editDraft, description: newDesc.join('\n') });
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                   <button
                     type="button"
                     onClick={() => {
-                      const newDesc = Array.isArray(editDraft.description) 
-                        ? [...editDraft.description, ""]
-                        : [(editDraft.description || ""), ""];
-                      setEditDraft({ ...editDraft, description: newDesc as any });
+                      const newDesc = [...(editDraft.description || "").split('\n'), ""];
+                      setEditDraft({ ...editDraft, description: newDesc.join('\n') });
                     }}
                     className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
@@ -279,7 +270,7 @@ export function ProjectsSection({
           />
           <div className="flex gap-2">
             <input
-              type="date"
+              type="text"
               placeholder="Start Date"
               className="w-1/2 text-sm p-2 border rounded-md"
               value={newProject.startDate}
@@ -291,7 +282,7 @@ export function ProjectsSection({
               }
             />
             <input
-              type="date"
+              type="text"
               placeholder="End Date"
               className="w-1/2 text-sm p-2 border rounded-md"
               value={newProject.endDate}
