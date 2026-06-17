@@ -30,7 +30,7 @@ export default async function RootLayout({
       lang="en"
       className={`${primaryFont.variable} ${monoFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
+      <body className="min-h-full" suppressHydrationWarning>
         {/* <div className="page-shell"> */}
         {/* <header className="topbar"> */}
         {/* <div> */}

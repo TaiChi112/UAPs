@@ -145,8 +145,8 @@ function LoginForm() {
               </svg>
               <span>Continue with Discord</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-white/50">
-              Mock
+            <span className="text-[10px] uppercase tracking-wider text-white/50 group-hover:text-white/70 transition-colors">
+              Active
             </span>
           </button>
 
@@ -161,8 +161,8 @@ function LoginForm() {
               </svg>
               <span>Continue with Line</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-white/50">
-              Mock
+            <span className="text-[10px] uppercase tracking-wider text-white/50 group-hover:text-white/70 transition-colors">
+              Active
             </span>
           </button>
 

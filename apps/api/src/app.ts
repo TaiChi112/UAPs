@@ -113,8 +113,8 @@ const formatError = (error: unknown, fallbackMessage: string) => {
 
 interface OAuthProviderAdapter {
   getAuthorizationUrl(state: string): string;
-  exchangeCode(code: string): Promise<{ accessToken: string }>;
-  fetchProfile(accessToken: string): Promise<{
+  exchangeCode(code: string): Promise<{ accessToken: string; [key: string]: any }>;
+  fetchProfile(tokenData: { accessToken: string; [key: string]: any }): Promise<{
     id: string;
     login?: string;
     name: string;
@@ -167,7 +167,7 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
 
       return { accessToken: tokenBody.access_token };
     },
-    fetchProfile: async (accessToken) => {
+    fetchProfile: async ({ accessToken }) => {
       const [githubUserRes, githubEmailsRes] = await Promise.all([
         fetch("https://api.github.com/user", {
           headers: {
@@ -252,7 +252,7 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
       const body = await res.json() as { access_token?: string };
       return { accessToken: body.access_token || "" };
     },
-    fetchProfile: async (accessToken) => {
+    fetchProfile: async ({ accessToken }) => {
       if (accessToken === "mock-google-token") {
         return {
           id: "google-mock-id-001",
@@ -280,7 +280,8 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
     getAuthorizationUrl: (state) => {
       const url = new URL("https://discord.com/api/oauth2/authorize");
       url.searchParams.set("client_id", process.env.DISCORD_CLIENT_ID || "discord-client-id-placeholder");
-      url.searchParams.set("redirect_uri", `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/discord/callback`);
+      const redirectUri = process.env.DISCORD_REDIRECT_URI ?? `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/discord/callback`;
+      url.searchParams.set("redirect_uri", redirectUri);
       url.searchParams.set("response_type", "code");
       url.searchParams.set("scope", "identify email");
       url.searchParams.set("state", state);
@@ -290,6 +291,7 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
       if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
         return { accessToken: "mock-discord-token" };
       }
+      const redirectUri = process.env.DISCORD_REDIRECT_URI ?? `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/discord/callback`;
       const res = await fetch("https://discord.com/api/oauth2/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -298,14 +300,14 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
           client_secret: process.env.DISCORD_CLIENT_SECRET,
           code,
           grant_type: "authorization_code",
-          redirect_uri: `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/discord/callback`,
+          redirect_uri: redirectUri,
         }).toString(),
       });
       if (!res.ok) throw new Error("Discord token exchange failed");
       const body = await res.json() as { access_token?: string };
       return { accessToken: body.access_token || "" };
     },
-    fetchProfile: async (accessToken) => {
+    fetchProfile: async ({ accessToken }) => {
       if (accessToken === "mock-discord-token") {
         return {
           id: "discord-mock-id-001",
@@ -332,20 +334,70 @@ const oauthAdapters: Record<string, OAuthProviderAdapter> = {
   line: {
     getAuthorizationUrl: (state) => {
       const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
-      url.searchParams.set("client_id", process.env.LINE_CLIENT_ID || "line-client-id-placeholder");
-      url.searchParams.set("redirect_uri", `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/line/callback`);
+      url.searchParams.set("client_id", process.env.LINE_CHANNEL_ID || "line-channel-id-placeholder");
+      const redirectUri = process.env.LINE_CALLBACK_URL ?? `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/line/callback`;
+      url.searchParams.set("redirect_uri", redirectUri);
       url.searchParams.set("response_type", "code");
       url.searchParams.set("scope", "profile openid email");
       url.searchParams.set("state", state);
       return url.toString();
     },
-    exchangeCode: async () => ({ accessToken: "mock-line-token" }),
-    fetchProfile: async () => ({
-      id: "line-mock-id-001",
-      login: "line_dev",
-      name: "Line Developer",
-      email: "line.dev@uaps.local",
-    }),
+    exchangeCode: async (code) => {
+      if (!process.env.LINE_CHANNEL_ID || !process.env.LINE_CHANNEL_SECRET) {
+        return { accessToken: "mock-line-token" };
+      }
+      const redirectUri = process.env.LINE_CALLBACK_URL ?? `${process.env.API_BASE_URL ?? "http://localhost:4000"}/v1/auth/line/callback`;
+      const res = await fetch("https://api.line.me/oauth2/v2.1/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: redirectUri,
+          client_id: process.env.LINE_CHANNEL_ID,
+          client_secret: process.env.LINE_CHANNEL_SECRET,
+        }).toString(),
+      });
+      if (!res.ok) throw new Error("Line token exchange failed");
+      const body = await res.json() as { access_token?: string; id_token?: string };
+      return { accessToken: body.access_token || "", idToken: body.id_token };
+    },
+    fetchProfile: async ({ accessToken, idToken }) => {
+      if (accessToken === "mock-line-token") {
+        return {
+          id: "line-mock-id-001",
+          login: "line_dev",
+          name: "Line Developer",
+          email: "line.dev@uaps.local",
+        };
+      }
+      const res = await fetch("https://api.line.me/v2/profile", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch Line user profile");
+      const user = await res.json() as { userId: string; displayName: string; pictureUrl?: string };
+      
+      let email = `${user.userId}@line.uaps.local`;
+      if (idToken) {
+        try {
+          const base64Url = idToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+          const decoded = JSON.parse(jsonPayload);
+          if (decoded.email) email = decoded.email;
+        } catch (e) {
+          console.warn("Failed to decode Line ID token for email", e);
+        }
+      }
+
+      return {
+        id: user.userId,
+        login: user.userId,
+        name: user.displayName,
+        email,
+        avatarUrl: user.pictureUrl,
+      };
+    },
   },
   facebook: {
     getAuthorizationUrl: (state) => {
@@ -489,8 +541,8 @@ export const app = new Elysia({ prefix: "/v1" })
         };
       }
 
-      const { accessToken } = await adapter.exchangeCode(code);
-      const profile = await adapter.fetchProfile(accessToken);
+      const tokenData = await adapter.exchangeCode(code);
+      const profile = await adapter.fetchProfile(tokenData);
 
       const mappedUser = await upsertUserFromOAuth({
         provider: provider.toLowerCase(),
