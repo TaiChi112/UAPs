@@ -62,7 +62,7 @@ export default function ResumeBuilderManualPage() {
       type: "ui/showToast",
       payload: { message: "New resume saved to Vault!" },
     });
-    router.push("/");
+    router.push("/vault");
   };
 
   const handleAddSkill = async (event: FormEvent<HTMLFormElement>) => {
@@ -85,7 +85,7 @@ export default function ResumeBuilderManualPage() {
       newProject={state.editor.newProject}
       onCancel={() => {
         dispatch({ type: "editor/startManualCreate" });
-        router.push("/");
+        router.push("/vault");
       }}
       onSave={handleSave}
       onTargetRoleChange={(value) =>

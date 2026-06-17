@@ -83,6 +83,10 @@ export default function ResumeBuilderDashboardPage() {
   ) => {
     event.stopPropagation();
 
+    if (!confirm("Are you sure you want to delete this resume?")) {
+      return;
+    }
+
     const deleted = await actions.deleteResume(resumeId);
 
     if (!deleted) {
