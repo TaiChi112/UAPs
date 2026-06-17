@@ -359,7 +359,7 @@ export class MockVaultRepository implements VaultRepository {
       return null;
     }
 
-    (resume as any).visibility = visibility;
+    resume.visibility = visibility;
     this.writeSnapshot(snapshot);
 
     return cloneSavedResume(resume);
@@ -368,7 +368,7 @@ export class MockVaultRepository implements VaultRepository {
   async getPublicResumes(): Promise<SavedResume[]> {
     const snapshot = this.readSnapshot();
     return snapshot.savedResumes
-      .filter((item) => (item as any).visibility === "public")
+      .filter((item) => item.visibility === "public")
       .map(cloneSavedResume);
   }
 

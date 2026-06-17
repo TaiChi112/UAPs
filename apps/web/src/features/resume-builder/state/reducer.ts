@@ -673,7 +673,7 @@ export const resumeBuilderReducer = (
     case "resume/updateVisibility": {
       const nextSavedResumes = state.savedResumes.map((resume) =>
         resume.id === action.payload.resumeId
-          ? { ...resume, visibility: action.payload.visibility } as any
+          ? { ...resume, visibility: action.payload.visibility }
           : resume,
       );
 
@@ -685,16 +685,16 @@ export const resumeBuilderReducer = (
               resume: {
                 ...state.ui.previewModal.resume,
                 visibility: action.payload.visibility,
-              } as any,
+              }
             }
           : state.ui.previewModal;
 
       return {
         ...state,
-        savedResumes: nextSavedResumes as SavedResume[],
+        savedResumes: nextSavedResumes,
         ui: {
           ...state.ui,
-          previewModal: nextPreviewModal as any,
+          previewModal: nextPreviewModal,
         },
       };
     }
