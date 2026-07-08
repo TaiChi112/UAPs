@@ -1,4 +1,4 @@
-import { query } from "./pool";
+import { query, withTransaction } from "./pool";
 
 export type GithubUser = {
   githubId: string;
@@ -12,9 +12,9 @@ export type UserRow = {
   user_id: string;
   name: string;
   email: string;
-  github_id: string;
+  github_id: string | null;
   github_url: string | null;
-  github_login: string;
+  github_login: string | null;
   avatar_url: string | null;
 };
 
@@ -54,9 +54,6 @@ export const upsertUserFromGithub = async (githubUser: GithubUser): Promise<User
   return result.rows[0];
 };
 
-import { prisma } from "./prisma";
-import type { Prisma } from "../generated/prisma/client";
-
 export type OAuthUserPayload = {
   provider: string;
   providerId: string;
@@ -67,91 +64,181 @@ export type OAuthUserPayload = {
   profileUrl?: string;
 };
 
-export const upsertUserFromOAuth = async (payload: OAuthUserPayload): Promise<UserRow | undefined> => {
-  const { provider, providerId, providerLogin, email, name, avatarUrl, profileUrl } = payload;
+type OAuthAccountUserRow = UserRow & {
+  account_id: string;
+};
 
-  const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // 1. Find existing OAuth Account
-    const existingAccount = await tx.oAuthAccount.findUnique({
-      where: {
-        provider_providerId: {
-          provider,
-          providerId,
-        },
-      },
-      include: {
-        user: true,
-      },
-    });
+type QueryRows<TRow> = {
+  rows: TRow[];
+};
 
-    if (existingAccount) {
-      // Update account details if needed
-      await tx.oAuthAccount.update({
-        where: { accountId: existingAccount.accountId },
-        data: {
-          providerLogin: providerLogin ?? null,
-          profileUrl: profileUrl ?? null,
-          avatarUrl: avatarUrl ?? null,
-          updatedAt: new Date(),
-        },
-      });
+type OAuthTransactionClient = {
+  query: <TRow = Record<string, unknown>>(
+    sql: string,
+    values?: readonly unknown[],
+  ) => Promise<QueryRows<TRow>>;
+};
 
-      // Update avatar if missing
-      if (!existingAccount.user.avatarUrl && avatarUrl) {
-        await tx.user.update({
-          where: { userId: existingAccount.user.userId },
-          data: { avatarUrl },
-        });
+type OAuthTransactionRunner = <TValue>(
+  runner: (client: OAuthTransactionClient) => Promise<TValue>,
+) => Promise<TValue>;
+
+type OAuthUserUpserterDependencies = {
+  runInTransaction: OAuthTransactionRunner;
+};
+
+const userReturningColumns = `
+  user_id,
+  name,
+  email,
+  github_id,
+  github_url,
+  github_login,
+  avatar_url
+`;
+
+const selectOAuthAccountUserSql = `
+  SELECT
+    oa.account_id,
+    u.user_id,
+    u.name,
+    u.email,
+    u.github_id,
+    u.github_url,
+    u.github_login,
+    u.avatar_url
+  FROM oauth_accounts oa
+  INNER JOIN users u ON u.user_id = oa.user_id
+  WHERE oa.provider = $1 AND oa.provider_id = $2
+  LIMIT 1;
+`;
+
+const updateOAuthAccountSql = `
+  UPDATE oauth_accounts
+  SET
+    provider_login = $2,
+    profile_url = $3,
+    avatar_url = $4,
+    updated_at = CURRENT_TIMESTAMP
+  WHERE account_id = $1;
+`;
+
+const updateMissingUserAvatarSql = `
+  UPDATE users
+  SET
+    avatar_url = $2,
+    updated_at = CURRENT_TIMESTAMP
+  WHERE user_id = $1 AND avatar_url IS NULL
+  RETURNING ${userReturningColumns};
+`;
+
+const upsertUserByEmailSql = `
+  INSERT INTO users (
+    name,
+    email,
+    avatar_url,
+    updated_at
+  )
+  VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+  ON CONFLICT (email)
+  DO UPDATE SET
+    avatar_url = COALESCE(users.avatar_url, EXCLUDED.avatar_url),
+    updated_at = CASE
+      WHEN users.avatar_url IS NULL AND EXCLUDED.avatar_url IS NOT NULL
+        THEN CURRENT_TIMESTAMP
+      ELSE users.updated_at
+    END
+  RETURNING ${userReturningColumns};
+`;
+
+const upsertOAuthAccountSql = `
+  INSERT INTO oauth_accounts (
+    user_id,
+    provider,
+    provider_id,
+    provider_login,
+    profile_url,
+    avatar_url,
+    updated_at
+  )
+  VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+  ON CONFLICT (provider, provider_id)
+  DO UPDATE SET
+    provider_login = EXCLUDED.provider_login,
+    profile_url = EXCLUDED.profile_url,
+    avatar_url = EXCLUDED.avatar_url,
+    updated_at = CURRENT_TIMESTAMP;
+`;
+
+const toUserRow = ({ account_id: _accountId, ...user }: OAuthAccountUserRow): UserRow => user;
+
+export const createOAuthUserUpserter = ({
+  runInTransaction,
+}: OAuthUserUpserterDependencies) => {
+  return async (payload: OAuthUserPayload): Promise<UserRow | undefined> => {
+    const {
+      provider,
+      providerId,
+      providerLogin,
+      email,
+      name,
+      avatarUrl,
+      profileUrl,
+    } = payload;
+
+    return runInTransaction(async (client) => {
+      const existingAccountResult = await client.query<OAuthAccountUserRow>(
+        selectOAuthAccountUserSql,
+        [provider, providerId],
+      );
+      const existingAccount = existingAccountResult.rows[0];
+
+      if (existingAccount) {
+        await client.query(updateOAuthAccountSql, [
+          existingAccount.account_id,
+          providerLogin ?? null,
+          profileUrl ?? null,
+          avatarUrl ?? null,
+        ]);
+
+        if (!existingAccount.avatar_url && avatarUrl) {
+          const updatedUserResult = await client.query<UserRow>(
+            updateMissingUserAvatarSql,
+            [existingAccount.user_id, avatarUrl],
+          );
+
+          return updatedUserResult.rows[0] ?? toUserRow(existingAccount);
+        }
+
+        return toUserRow(existingAccount);
       }
 
-      return existingAccount.user;
-    }
+      const userResult = await client.query<UserRow>(upsertUserByEmailSql, [
+        name,
+        email,
+        avatarUrl ?? null,
+      ]);
+      const user = userResult.rows[0];
 
-    // 2. Link by email or create new user
-    let userRecord = await tx.user.findUnique({
-      where: { email },
-    });
+      if (!user) {
+        return undefined;
+      }
 
-    if (!userRecord) {
-      userRecord = await tx.user.create({
-        data: {
-          name,
-          email,
-          avatarUrl: avatarUrl ?? null,
-        },
-      });
-    } else if (!userRecord.avatarUrl && avatarUrl) {
-      userRecord = await tx.user.update({
-        where: { userId: userRecord.userId },
-        data: { avatarUrl },
-      });
-    }
-
-    // 3. Create link
-    await tx.oAuthAccount.create({
-      data: {
-        userId: userRecord.userId,
+      await client.query(upsertOAuthAccountSql, [
+        user.user_id,
         provider,
         providerId,
-        providerLogin: providerLogin ?? null,
-        profileUrl: profileUrl ?? null,
-        avatarUrl: avatarUrl ?? null,
-      },
+        providerLogin ?? null,
+        profileUrl ?? null,
+        avatarUrl ?? null,
+      ]);
+
+      return user;
     });
-
-    return userRecord;
-  });
-
-  if (!user) return undefined;
-
-  return {
-    user_id: user.userId,
-    name: user.name,
-    email: user.email,
-    github_id: user.githubId,
-    github_url: user.githubUrl,
-    github_login: user.githubLogin,
-    avatar_url: user.avatarUrl,
   };
 };
 
+export const upsertUserFromOAuth = createOAuthUserUpserter({
+  runInTransaction: (runner) =>
+    withTransaction((client) => runner(client as OAuthTransactionClient)),
+});
