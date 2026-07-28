@@ -95,7 +95,7 @@ const mergeVaultData = (apiVault: VaultData, fallbackVault: VaultData): VaultDat
       name: apiVault.basicInfo.name || fallbackVault.basicInfo.name,
       email: apiVault.basicInfo.email || fallbackVault.basicInfo.email,
       phone: apiVault.basicInfo.phone || fallbackVault.basicInfo.phone,
-      github: apiVault.basicInfo.github || fallbackVault.basicInfo.github,
+      linkedin: apiVault.basicInfo.linkedin || fallbackVault.basicInfo.linkedin,
     },
     skills: dedupeByKey(apiSkillsWithFallbackCategories, (skill) =>
       String(skill.id),

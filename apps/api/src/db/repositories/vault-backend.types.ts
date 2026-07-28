@@ -119,4 +119,10 @@ export interface IVaultBackendRepository {
     resumeId: ResumeId,
     status: FeatureResumeStatus,
   ): Promise<SavedResume | null>;
+  getPublicResumes(): Promise<any>;
+  updateResumeVisibility(
+    userId: VaultBackendUserId,
+    resumeId: ResumeId,
+    visibility: string,
+  ): Promise<SavedResume | null>;
 }

@@ -45,7 +45,7 @@ model Project {
   userId          String          @db.Uuid @map("user_id")
   title           String          @db.VarChar(255)
   description     String?         @db.Text
-  repoUrl         String?         @db.VarChar(255) @map("repo_url")
+  projectUrl      String?         @db.VarChar(255) @map("project_url")
   isActive        Boolean         @default(true) @map("is_active")
   status          String          @default("Completed") @db.VarChar(50)
   startDate       DateTime?       @db.Date @map("start_date")
@@ -147,7 +147,6 @@ model ResumeBasic {
   location      String?  @db.VarChar(255)
   linkedinUrl   String?  @db.VarChar(255) @map("linkedin_url")
   portfolioUrl  String?  @db.VarChar(255) @map("portfolio_url")
-  githubUrl     String?  @db.VarChar(255) @map("github_url")
   summary       String?  @db.Text
   createdAt     DateTime @default(now()) @db.Timestamp(6) @map("created_at")
   updatedAt     DateTime @default(now()) @db.Timestamp(6) @map("updated_at")

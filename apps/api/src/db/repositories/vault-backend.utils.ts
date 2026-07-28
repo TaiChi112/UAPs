@@ -165,12 +165,12 @@ export const createEmptyResumeConfig = (): ResumeConfig => ({
 
 export const toBasicInfo = (input: {
   email: string | null | undefined;
-  github: string | null | undefined;
+  linkedin: string | null | undefined;
   name: string | null | undefined;
   phone: string | null | undefined;
 }): BasicInfo => ({
   name: input.name ?? "",
   email: input.email ?? "",
   phone: input.phone ?? "",
-  github: input.github ?? "",
+  linkedin: input.linkedin ?? "",
 });
