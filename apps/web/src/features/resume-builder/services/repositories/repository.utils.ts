@@ -86,7 +86,7 @@ type RawVaultData = {
     role?: string;
     description?: string;
     duration?: string;
-    githubUrl?: string;
+    projectUrl?: string;
   }>;
   experience?: Array<{
     id?: string;
@@ -145,7 +145,7 @@ export const normalizeVaultData = (
     name: vault?.basicInfo?.name ?? "",
     email: vault?.basicInfo?.email ?? "",
     phone: vault?.basicInfo?.phone ?? "",
-    github: vault?.basicInfo?.github ?? "",
+    linkedin: vault?.basicInfo?.linkedin ?? "",
   },
   skills: (vault?.skills ?? []).map((skill) => ({
     id: asSkillId(String(skill.id ?? `s-${Date.now()}`)),
@@ -157,7 +157,7 @@ export const normalizeVaultData = (
     title: project.title ?? "",
     duration: project.duration ?? "",
     description: project.description ?? "",
-    githubUrl: project.githubUrl ?? "",
+    projectUrl: project.projectUrl ?? "",
   })),
   experience: (vault?.experience ?? []).map((experience) => ({
     id: asExperienceId(String(experience.id ?? `e-${Date.now()}`)),

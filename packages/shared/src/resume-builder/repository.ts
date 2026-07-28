@@ -38,6 +38,7 @@ export type UpsertSavedResumeInput = {
   title: string;
   date: string;
   status: FeatureResumeStatus;
+  visibility?: string;
   config: ResumeConfig;
 };
 

@@ -91,7 +91,7 @@ export class MockVaultRepository implements VaultRepository {
       title: input.title.trim(),
       duration: `${input.startDate} - ${input.endDate}`,
       description: input.description.trim(),
-      githubUrl: input.githubUrl?.trim() ?? "",
+      projectUrl: input.projectUrl?.trim() ?? "",
     };
 
     snapshot.vault.projects.push(project);
@@ -142,7 +142,7 @@ export class MockVaultRepository implements VaultRepository {
       ...snapshot.vault.projects[projectIndex],
       ...input,
       duration: `${input.startDate} - ${input.endDate}`,
-      githubUrl: input.githubUrl?.trim() ?? "",
+      projectUrl: input.projectUrl?.trim() ?? "",
     };
 
     snapshot.vault.projects[projectIndex] = updatedProject;

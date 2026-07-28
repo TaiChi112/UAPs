@@ -50,7 +50,7 @@ export const INITIAL_VAULT_DATA = {
     name: "Somchai Coding",
     email: "somchai.c@example.com",
     phone: "+66 81 234 5678",
-    github: "github.com/somchaicodes",
+    linkedin: "github.com/somchaicodes",
   },
   skills: [
     { id: SKILL_IDS.python, name: "Python", category: "programming" },

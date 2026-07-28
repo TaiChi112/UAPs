@@ -32,7 +32,7 @@ export type BasicInfo = {
   name: string;
   email: string;
   phone: string;
-  github: string;
+  linkedin: string;
 };
 
 export type VaultSkill = {
@@ -46,7 +46,7 @@ export type VaultProject = {
   title: string;
   duration: string;
   description: string;
-  githubUrl?: string;
+  projectUrl?: string;
 };
 
 export type VaultExperience = {
@@ -107,7 +107,7 @@ export type NewProjectDraft = {
   startDate: string;
   endDate: string;
   description: string;
-  githubUrl?: string;
+  projectUrl?: string;
 };
 
 export type NewExperienceDraft = {
