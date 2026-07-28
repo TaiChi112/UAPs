@@ -69,7 +69,7 @@ describe("MockVaultRepository", () => {
         selectedProjects: [],
         selectedExperience: [],
         selectedCerts: [],
-        selectedAwards: [],
+        selectedAwards: [], sectionOrder: [],
       },
     });
 
