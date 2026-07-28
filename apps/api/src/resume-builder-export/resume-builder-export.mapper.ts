@@ -56,7 +56,7 @@ const mapProjects = (
       title: project.title,
       duration: project.duration,
       description: project.description,
-      githubUrl: project.githubUrl,
+      projectUrl: project.projectUrl,
     }),
   );
 
@@ -109,7 +109,7 @@ export const mapResumeBuilderExportPayload = (
     name: vault.basicInfo.name,
     email: vault.basicInfo.email,
     phone: vault.basicInfo.phone,
-    github: vault.basicInfo.github,
+    linkedin: vault.basicInfo.linkedin,
   },
   targetRole: savedResume.config.targetRole,
   targetCompany: savedResume.config.targetCompany,
