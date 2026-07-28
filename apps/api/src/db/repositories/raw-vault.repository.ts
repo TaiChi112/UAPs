@@ -34,7 +34,8 @@ import {
 
 type BasicInfoRow = {
   email: string;
-  github: string;
+  
+  linkedin: string;
   name: string;
   phone: string;
 };
@@ -49,6 +50,7 @@ type ProjectRow = {
   description: string | null;
   project_id: string;
   title: string;
+  project_url: string | null;
 };
 
 type CertificateRow = {
@@ -81,6 +83,7 @@ type ResumeRow = {
   target_job_title: string | null;
   updated_at: Date | string;
   version_name: string;
+  visibility: string | null;
 };
 
 type CompositionLinkRow = {
@@ -90,7 +93,7 @@ type CompositionLinkRow = {
 
 type UserProfileRow = {
   email: string;
-  github_url: string | null;
+  linkedin_url: string | null;
   name: string;
   phone: string | null;
 };
@@ -293,7 +296,7 @@ const upsertResumeBasic = async (
       userProfile.name,
       userProfile.email,
       userProfile.phone,
-      userProfile.github_url,
+      userProfile.linkedin_url,
       summary,
     ],
   );
@@ -381,7 +384,8 @@ export class RawVaultRepository implements IVaultBackendRepository {
       projects: projectResult.rows.map((project) => ({
         id: asProjectId(project.project_id),
         title: project.title,
-        role: "",
+        duration: "",
+        projectUrl: project.project_url ?? undefined,
         description: project.description ?? "",
       })),
       experience: experienceResult.rows.map((experience) => ({
@@ -502,6 +506,7 @@ export class RawVaultRepository implements IVaultBackendRepository {
         targetJobTitle: resume.target_job_title,
         targetCompany: resume.target_company,
         summary: resume.summary,
+        visibility: resume.visibility ?? "private",
         status: resume.status,
         updatedAt: resume.updated_at,
         projectIds: projectMap.get(resume.resume_id) ?? [],
@@ -577,7 +582,8 @@ export class RawVaultRepository implements IVaultBackendRepository {
     return {
       id: asProjectId(project.project_id),
       title: project.title,
-      role: input.role?.trim() || "",
+      duration: "",
+      projectUrl: "",
       description: project.description ?? "",
     };
   }
@@ -661,6 +667,7 @@ export class RawVaultRepository implements IVaultBackendRepository {
         targetJobTitle: resume.target_job_title,
         targetCompany: resume.target_company,
         summary: input.config.summary,
+        visibility: resume.visibility ?? "private",
         status: resume.status,
         updatedAt: resume.updated_at,
         projectIds: input.config.selectedProjects.map(String),
@@ -731,4 +738,7 @@ export class RawVaultRepository implements IVaultBackendRepository {
       config: existingResume.config,
     });
   }
+
+  async getPublicResumes(): Promise<import("@uaps/shared/resume-builder").SavedResume[]> { throw new Error("Not implemented"); }
+  async updateResumeVisibility(userId: string, resumeId: import("@uaps/shared/resume-builder").ResumeId, visibility: string): Promise<import("@uaps/shared/resume-builder").SavedResume | null> { throw new Error("Not implemented"); }
 }

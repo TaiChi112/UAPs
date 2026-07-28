@@ -17,7 +17,7 @@ type SeedProject = {
   key: string;
   title: string;
   description: string;
-  repoUrl?: string;
+  projectUrl?: string;
   status: "Completed" | "In Progress";
   isActive: boolean;
   skillKeys: string[];
@@ -181,7 +181,7 @@ const profiles: SeedProfile[] = [
           "Designed optimistic inventory workflows, order exceptions dashboards, and audit-friendly activity trails for finance and support teams.",
           "Reduced reconciliation turnaround from two days to under two hours by replacing spreadsheet-driven handoffs with event-backed automation."
         ),
-        repoUrl: "https://github.com/maya-chen-demo/b2b-commerce-control-plane",
+        projectUrl: "https://github.com/maya-chen-demo/b2b-commerce-control-plane",
         status: "Completed",
         isActive: true,
         skillKeys: [
@@ -201,7 +201,7 @@ const profiles: SeedProfile[] = [
           "Shipped reusable charting primitives, CSV import pipelines, and role-based access controls for agency operators managing dozens of creator accounts.",
           "Instrumented end-to-end tests with Playwright to protect billing flows, shared exports, and timezone-sensitive revenue rollups."
         ),
-        repoUrl: "https://github.com/maya-chen-demo/creator-analytics-suite",
+        projectUrl: "https://github.com/maya-chen-demo/creator-analytics-suite",
         status: "Completed",
         isActive: true,
         skillKeys: [
@@ -221,7 +221,7 @@ const profiles: SeedProfile[] = [
           "Introduced typed BFF endpoints, server-driven feature flags, and resilient document upload flows for medical records and care plans.",
           "Partnered with security and compliance stakeholders to harden session handling, audit logging, and incident triage visibility."
         ),
-        repoUrl: "https://github.com/maya-chen-demo/patient-portal-modernization",
+        projectUrl: "https://github.com/maya-chen-demo/patient-portal-modernization",
         status: "In Progress",
         isActive: true,
         skillKeys: [
@@ -439,7 +439,7 @@ const profiles: SeedProfile[] = [
           "Packaged cluster add-ons, ingress standards, and operational playbooks into a reusable platform starter kit consumed by four internal product teams.",
           "Cut environment provisioning lead time from three weeks to under forty-five minutes."
         ),
-        repoUrl: "https://github.com/rafael-ortiz-demo/multi-region-platform-bootstrap",
+        projectUrl: "https://github.com/rafael-ortiz-demo/multi-region-platform-bootstrap",
         status: "Completed",
         isActive: true,
         skillKeys: ["go", "kubernetes", "terraform", "aws", "argocd"],
@@ -452,7 +452,7 @@ const profiles: SeedProfile[] = [
           "Added policy-aware namespace quotas and cost telemetry so product teams could ship faster without losing control of shared cluster resources.",
           "Drove a 60 percent reduction in release coordination overhead for QA and product owners."
         ),
-        repoUrl: "https://github.com/rafael-ortiz-demo/preview-environments",
+        projectUrl: "https://github.com/rafael-ortiz-demo/preview-environments",
         status: "Completed",
         isActive: true,
         skillKeys: [
@@ -471,7 +471,7 @@ const profiles: SeedProfile[] = [
           "Used Go workers and Python data quality checks to normalize telemetry from heterogeneous services with minimal agent customization.",
           "Enabled faster incident reconstruction and postmortem analysis across dozens of platform services."
         ),
-        repoUrl: "https://github.com/rafael-ortiz-demo/observability-lakehouse",
+        projectUrl: "https://github.com/rafael-ortiz-demo/observability-lakehouse",
         status: "In Progress",
         isActive: true,
         skillKeys: ["go", "python", "postgresql", "prometheus", "grafana", "gcp"],
@@ -687,7 +687,7 @@ const profiles: SeedProfile[] = [
           "Shipped model diagnostics, drift monitoring, and explainability views that helped commercial teams trust forecast adjustments during promotions and supply shocks.",
           "Improved weekly forecast accuracy by 11 percent in high-variance product lines."
         ),
-        repoUrl: "https://github.com/priya-natarajan-demo/demand-forecasting-workbench",
+        projectUrl: "https://github.com/priya-natarajan-demo/demand-forecasting-workbench",
         status: "Completed",
         isActive: true,
         skillKeys: ["python", "sql", "pytorch", "airflow", "mlflow", "bigquery"],
@@ -700,7 +700,7 @@ const profiles: SeedProfile[] = [
           "Integrated dbt transformations, MLflow lineage, and FastAPI inference endpoints into a single release process with reproducible artifacts.",
           "Enabled risk analysts to compare model behavior across customer segments without relying on ad hoc notebooks."
         ),
-        repoUrl: "https://github.com/priya-natarajan-demo/credit-risk-explainability",
+        projectUrl: "https://github.com/priya-natarajan-demo/credit-risk-explainability",
         status: "Completed",
         isActive: true,
         skillKeys: ["python", "sql", "dbt", "mlflow", "fastapi", "docker"],
@@ -713,7 +713,7 @@ const profiles: SeedProfile[] = [
           "Used streaming event capture and analyst feedback loops to compare prompt variants, retrieval strategies, and grounding quality.",
           "Helped product leadership decide when the copilot was reliable enough for limited production rollout."
         ),
-        repoUrl: "https://github.com/priya-natarajan-demo/support-copilot-eval",
+        projectUrl: "https://github.com/priya-natarajan-demo/support-copilot-eval",
         status: "In Progress",
         isActive: true,
         skillKeys: ["python", "vertexai", "fastapi", "kafka", "docker", "pandas"],
@@ -872,7 +872,7 @@ const profiles: SeedProfile[] = [
         key: "ai-agent",
         title: "Autonomous AI Agent",
         description: "Built an autonomous AI agent capable of generating its own code using LLMs.",
-        repoUrl: "https://github.com/johndoe-demo/ai-agent",
+        projectUrl: "https://github.com/johndoe-demo/ai-agent",
         status: "Completed",
         isActive: true,
         skillKeys: ["python", "machine-learning"],
@@ -925,7 +925,6 @@ const main = async () => {
           name: profile.name,
           githubId: profile.githubId,
           githubLogin: profile.githubLogin,
-          githubUrl: profile.githubUrl,
           avatarUrl: profile.avatarUrl,
         },
         create: {
@@ -933,7 +932,6 @@ const main = async () => {
           email: profile.email,
           githubId: profile.githubId,
           githubLogin: profile.githubLogin,
-          githubUrl: profile.githubUrl,
           avatarUrl: profile.avatarUrl,
         },
       });
@@ -988,7 +986,7 @@ const main = async () => {
             userId: user.userId,
             title: project.title,
             description: project.description,
-            repoUrl: project.repoUrl,
+            projectUrl: project.projectUrl,
             status: project.status,
             isActive: project.isActive,
           },
@@ -1101,7 +1099,6 @@ const main = async () => {
                 location: profile.location,
                 linkedinUrl: profile.linkedinUrl,
                 portfolioUrl: profile.portfolioUrl,
-                githubUrl: profile.githubUrl,
                 summary: resume.summary,
               },
             },
