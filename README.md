@@ -8,6 +8,7 @@
 
 ## Table of Contents
 
+- **[🚀 Quick Start (Local Development)](#-quick-start-local-development)**
 1. [Planning](#1-planning)
 2. [Analysis](#2-analysis)
 3. [Design](#3-design)
@@ -15,6 +16,35 @@
 5. [Testing](#5-testing)
 6. [Deployment](#6-deployment)
 7. [Maintenance](#7-maintenance)
+
+---
+
+## 🚀 Quick Start (Local Development)
+
+If you want to start developing immediately, follow these steps. For full architectural details, see the documentation below.
+
+**Prerequisites:** [Bun](https://bun.sh/) (≥ 1.x), [Docker](https://www.docker.com/), and a GitHub OAuth App.
+
+```bash
+# 1. Install dependencies
+bun install
+
+# 2. Start PostgreSQL via Docker (Automatically runs schema bootstrap)
+docker compose up -d
+
+# 3. Generate Prisma Client
+bun run --cwd apps/api prisma:generate
+
+# 4. Configure environment variables
+cp apps/api/.env.example apps/api/.env   # (Add your GitHub OAuth secrets here)
+cp apps/web/.env.example apps/web/.env
+
+# 5. (Optional) Seed dummy data
+bun run --cwd apps/api seed:vault-test
+
+# 6. Start the development servers (API on 4000, Web on 3000)
+bun run dev
+```
 
 ---
 
@@ -421,26 +451,11 @@ Unit and integration tests are executed using the built-in Bun test runner for b
 
 ### 6.2 Local Development
 
-**Prerequisites:** Bun ≥ 1.x, PostgreSQL ≥ 15, a GitHub OAuth App.
+Please refer to the **[🚀 Quick Start](#-quick-start-local-development)** section at the top of this document for the recommended way to get the project running using Docker. 
 
+If you prefer running PostgreSQL natively without Docker, ensure you create a database named `uaps` and apply the schema manually:
 ```bash
-# 1. Install dependencies (all workspaces)
-bun install
-
-# 2. Apply database bootstrap SQL
 psql -d uaps -f packages/db/sql/001_bootstrap_active_schema.sql
-
-# 3. Configure environment variables
-cp apps/api/.env.example apps/api/.env   # then fill in secrets
-cp apps/web/.env.example apps/web/.env
-
-# 4. Run database seed (optional)
-bun run --cwd apps/api seed:vault-test
-
-# 5. Start both services concurrently
-bun run dev
-# API → http://localhost:4000
-# Web → http://localhost:3000
 ```
 
 ### 6.3 Intended Deployment Architecture
