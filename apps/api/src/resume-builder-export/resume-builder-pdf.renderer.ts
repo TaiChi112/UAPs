@@ -156,7 +156,7 @@ const writeHeader = (
   const contactParts = [
     payload.basicInfo.email.trim(),
     payload.basicInfo.phone.trim(),
-    payload.basicInfo.github.trim(),
+    payload.basicInfo.linkedin.trim(),
   ].filter((value) => value.length > 0);
 
   if (contactParts.length > 0) {
@@ -225,9 +225,9 @@ const writeProjectsSection = (
     const currentY = document.y;
     document.font("Helvetica-Bold").fontSize(11).fillColor(COLORS.heading);
 
-    if (project.githubUrl) {
+    if (project.projectUrl) {
       document.text(project.title, document.page.margins.left, currentY, {
-        link: project.githubUrl,
+        link: project.projectUrl,
         underline: false,
       });
     } else {

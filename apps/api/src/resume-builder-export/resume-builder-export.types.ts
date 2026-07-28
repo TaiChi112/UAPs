@@ -4,7 +4,7 @@ export type ResumeBuilderExportBasicInfo = {
   name: string;
   email: string;
   phone: string;
-  github: string;
+  linkedin: string;
 };
 
 export type ResumeBuilderExportSkill = {
@@ -16,7 +16,7 @@ export type ResumeBuilderExportProject = {
   title: string;
   duration: string;
   description: string;
-  githubUrl?: string;
+  projectUrl?: string;
 };
 
 export type ResumeBuilderExportExperience = {
