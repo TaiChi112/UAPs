@@ -51,8 +51,8 @@ const resumeConfigSchema = z
 const basicInfoSchema = z.object({
   name: z.string().max(255),
   email: z.string().max(255),
-  phone: z.string().max(100),
-  github: z.string().max(255),
+  phone: z.string().max(50),
+  linkedin: z.string().max(255),
 });
 
 const vaultSkillSchema = z.object({
@@ -66,7 +66,7 @@ const vaultProjectSchema = z.object({
   title: z.string().min(1).max(255),
   duration: z.string().max(255).optional().default(""),
   description: z.string().max(5000),
-  githubUrl: z.string().url().max(1000).optional().or(z.literal("")),
+  projectUrl: z.string().url().max(1000).optional().or(z.literal("")),
 });
 
 const vaultExperienceSchema = z.object({
@@ -103,7 +103,7 @@ const vaultDataSchema = z
       name: value.basicInfo.name.trim(),
       email: value.basicInfo.email.trim(),
       phone: value.basicInfo.phone.trim(),
-      github: value.basicInfo.github.trim(),
+      linkedin: value.basicInfo.linkedin.trim(),
     },
     skills: value.skills.map((skill) => ({
       id: asSkillId(skill.id),
@@ -115,7 +115,7 @@ const vaultDataSchema = z
       title: project.title.trim(),
       duration: project.duration.trim(),
       description: project.description.trim(),
-      githubUrl: project.githubUrl?.trim() || undefined,
+      projectUrl: project.projectUrl?.trim() || undefined,
     })),
     experience: value.experience.map((experience) => ({
       id: asExperienceId(experience.id),
@@ -154,7 +154,7 @@ export const newProjectDraftSchema = z
     startDate: z.string().max(255).optional().default(""),
     endDate: z.string().max(255).optional().default(""),
     description: z.string().min(1).max(5000),
-    githubUrl: z.string().url().max(1000).optional().or(z.literal("")),
+    projectUrl: z.string().url().max(1000).optional().or(z.literal("")),
   })
   .transform(
     (value): NewProjectDraft => ({
@@ -162,7 +162,7 @@ export const newProjectDraftSchema = z
       startDate: value.startDate.trim(),
       endDate: value.endDate.trim(),
       description: value.description.trim(),
-      githubUrl: value.githubUrl?.trim() || undefined,
+      projectUrl: value.projectUrl?.trim() || undefined,
     }),
   );
 
