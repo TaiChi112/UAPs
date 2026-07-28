@@ -132,7 +132,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         name: latestResumeBasic?.fullName ?? user.name,
         email: latestResumeBasic?.email ?? user.email,
         phone: latestResumeBasic?.phone ?? "",
-        github: latestResumeBasic?.githubUrl ?? user.githubUrl ?? "",
+        linkedin: latestResumeBasic?.linkedinUrl ?? user.githubUrl ?? "",
       }),
       skills: userSkills.map((userSkill: PrismaUserSkillWithSkill) => ({
         id: asSkillId(userSkill.skillId),
@@ -144,7 +144,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         title: project.title,
         duration: formatDuration(project.startDate, project.endDate),
         description: project.description ?? "",
-        githubUrl: project.repoUrl ?? undefined,
+        projectUrl: project.projectUrl ?? undefined,
       })),
       experience: experiences.map((experience: Experience) => ({
         id: asExperienceId(experience.experienceId),
@@ -281,7 +281,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         description: input.description.trim(),
         startDate: parseSafeDate(input.startDate),
         endDate: parseSafeDate(input.endDate),
-        repoUrl: input.githubUrl || null,
+        projectUrl: input.projectUrl || null,
         status: "Completed",
         isActive: true,
       },
@@ -292,7 +292,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       title: project.title,
       duration: formatDuration(project.startDate, project.endDate),
       description: project.description ?? "",
-      githubUrl: project.repoUrl ?? undefined,
+      projectUrl: project.projectUrl ?? undefined,
     };
   }
 
@@ -311,7 +311,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
         description: input.description.trim(),
         startDate: parseSafeDate(input.startDate),
         endDate: parseSafeDate(input.endDate),
-        repoUrl: input.githubUrl || null,
+        projectUrl: input.projectUrl || null,
       },
     });
 
@@ -320,7 +320,7 @@ export class OrmVaultRepository implements IVaultBackendRepository {
       title: project.title,
       duration: formatDuration(project.startDate, project.endDate),
       description: project.description ?? "",
-      githubUrl: project.repoUrl ?? undefined,
+      projectUrl: project.projectUrl ?? undefined,
     };
   }
 
@@ -593,8 +593,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
             fullName: user.resumes[0]?.resumeBasic?.fullName ?? user.name,
             email: user.resumes[0]?.resumeBasic?.email ?? user.email,
             phone: user.resumes[0]?.resumeBasic?.phone ?? null,
-            githubUrl:
-              user.resumes[0]?.resumeBasic?.githubUrl ?? user.githubUrl,
+            linkedinUrl:
+              user.resumes[0]?.resumeBasic?.linkedinUrl ?? user.githubUrl,
             summary: input.config.summary || null,
           },
           create: {
@@ -602,8 +602,8 @@ export class OrmVaultRepository implements IVaultBackendRepository {
             fullName: user.resumes[0]?.resumeBasic?.fullName ?? user.name,
             email: user.resumes[0]?.resumeBasic?.email ?? user.email,
             phone: user.resumes[0]?.resumeBasic?.phone ?? null,
-            githubUrl:
-              user.resumes[0]?.resumeBasic?.githubUrl ?? user.githubUrl,
+            linkedinUrl:
+              user.resumes[0]?.resumeBasic?.linkedinUrl ?? user.githubUrl,
             summary: input.config.summary || null,
           },
         });
