@@ -12,7 +12,7 @@ const createPayloadFixture = (): ResumeBuilderExportPayload => ({
     name: "Somchai Coding",
     email: "somchai.c@example.com",
     phone: "+66 81 234 5678",
-    github: "github.com/somchaicodes",
+    linkedin: "github.com/somchaicodes",
   },
   targetRole: "AI Engineer",
   targetCompany: "Company A",
@@ -25,7 +25,8 @@ const createPayloadFixture = (): ResumeBuilderExportPayload => ({
   projects: [
     {
       title: "Customer Churn Prediction",
-      role: "AI Engineer",
+      duration: "",
+      projectUrl: undefined,
       description: "Built a churn model with TensorFlow and Python.",
     },
   ],
@@ -49,6 +50,7 @@ const createPayloadFixture = (): ResumeBuilderExportPayload => ({
       desc: "Built an AI-driven healthcare app.",
     },
   ],
+  sectionOrder: [],
 });
 
 describe("renderResumeBuilderPdf", () => {
@@ -67,6 +69,7 @@ describe("renderResumeBuilderPdf", () => {
       ...createPayloadFixture(),
       certificates: [],
       awards: [],
+      sectionOrder: [],
     });
     const pdfText = Buffer.from(pdfBytes).toString("latin1");
 

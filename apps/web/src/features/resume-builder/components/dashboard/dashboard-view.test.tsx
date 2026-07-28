@@ -28,6 +28,7 @@ describe("DashboardView", () => {
         resumes={[INITIAL_SAVED_RESUMES[0]]}
         db={INITIAL_VAULT_DATA}
         previewResume={null}
+        onVisibilityChange={vi.fn()}
         isDownloadingPdf={false}
         statusColors={{
           Draft: "draft",

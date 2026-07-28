@@ -18,7 +18,7 @@ const createVaultFixture = (): VaultData => ({
     name: "Somchai Coding",
     email: "somchai.c@example.com",
     phone: "+66 81 234 5678",
-    github: "github.com/somchaicodes",
+    linkedin: "github.com/somchaicodes",
   },
   skills: [
     { id: asSkillId("s1"), name: "Python", category: "programming" },
@@ -28,7 +28,8 @@ const createVaultFixture = (): VaultData => ({
     {
       id: asProjectId("p2"),
       title: "Customer Churn Prediction",
-      role: "AI Engineer",
+      duration: "",
+      projectUrl: undefined,
       description: "Built a churn model with TensorFlow and Python.",
     },
   ],
@@ -62,7 +63,8 @@ const createResumeFixture = (): SavedResume => ({
   title: "AI Engineer @ Company A",
   date: "10 May 2026",
   status: "Applied",
-  config: {
+    visibility: "private",
+    config: {
     targetRole: "AI Engineer",
     targetCompany: "Company A",
     summary:
@@ -72,6 +74,7 @@ const createResumeFixture = (): SavedResume => ({
     selectedExperience: [asExperienceId("e1")],
     selectedCerts: [asCertificateId("c1")],
     selectedAwards: [asAwardId("a1")],
+    sectionOrder: [],
   },
 });
 

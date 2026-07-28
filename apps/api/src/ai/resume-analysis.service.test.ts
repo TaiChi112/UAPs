@@ -19,7 +19,7 @@ const createVaultFixture = (): VaultData => ({
     name: "Somchai Coding",
     email: "somchai.c@example.com",
     phone: "+66 81 234 5678",
-    github: "github.com/somchaicodes",
+    linkedin: "linkedin.com/in/somchaicodes",
   },
   skills: [
     { id: asSkillId("s1"), name: "Python", category: "programming" },
@@ -29,8 +29,9 @@ const createVaultFixture = (): VaultData => ({
     {
       id: asProjectId("p2"),
       title: "Customer Churn Prediction",
-      role: "AI Engineer",
+      duration: "Jun 2023 - Aug 2023",
       description: "Built a churn model with TensorFlow.",
+      projectUrl: "github.com/somchaicodes/churn-prediction",
     },
   ],
   experience: [
