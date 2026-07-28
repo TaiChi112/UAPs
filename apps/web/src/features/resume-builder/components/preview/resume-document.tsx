@@ -115,9 +115,9 @@ export function ResumeDocument({ config, db }: ResumeDocumentProps) {
                       <div key={project.id}>
                         <div className="flex justify-between items-baseline">
                           <h4 className="font-semibold text-slate-900">
-                            {project.githubUrl ? (
+                            {project.projectUrl ? (
                               <a
-                                href={project.githubUrl}
+                                href={project.projectUrl}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="hover:text-blue-600 hover:underline"

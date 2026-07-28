@@ -41,7 +41,7 @@ export function ProjectsSection({
     description: "",
     startDate: "",
     endDate: "",
-    githubUrl: "",
+    projectUrl: "",
   });
 
 
@@ -54,7 +54,7 @@ export function ProjectsSection({
       description: project.description || "",
       startDate,
       endDate,
-      githubUrl: project.githubUrl || "",
+      projectUrl: project.projectUrl || "",
     });
   };
 
@@ -110,9 +110,9 @@ export function ProjectsSection({
                   type="url"
                   placeholder="GitHub Repository URL (Optional)"
                   className="w-full text-sm p-2 border rounded-md"
-                  value={editDraft.githubUrl || ""}
+                  value={editDraft.projectUrl || ""}
                   onChange={(e) =>
-                    setEditDraft({ ...editDraft, githubUrl: e.target.value })
+                    setEditDraft({ ...editDraft, projectUrl: e.target.value })
                   }
                 />
                 <div className="flex gap-2">
@@ -262,11 +262,11 @@ export function ProjectsSection({
             type="url"
             placeholder="GitHub Repository URL (Optional)"
             className="w-full text-sm p-2 border rounded-md"
-            value={newProject.githubUrl || ""}
+            value={newProject.projectUrl || ""}
             onChange={(event) =>
               onProjectDraftChange({
                 ...newProject,
-                githubUrl: event.target.value,
+                projectUrl: event.target.value,
               })
             }
           />
