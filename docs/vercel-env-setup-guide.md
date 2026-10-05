@@ -21,7 +21,7 @@
 
 ## 2. แหล่งที่มาและวิธีเอาค่า Key ต่างๆ
 
-### 🗄️ 2.1 Database (Neon Serverless Postgres)
+### ️ 2.1 Database (Neon Serverless Postgres)
 ระบบใช้ Neon Database ในการเก็บข้อมูล คุณจำเป็นต้องใช้ Connection String ทั้งแบบ Pool (สำหรับการทำงานปกติ) และแบบ Direct (สำหรับ Prisma CLI migration)
 
 **ขั้นตอนการดึงค่า:**
@@ -39,7 +39,7 @@
 
 ---
 
-### 🐙 2.2 GitHub OAuth (ระบบ Login)
+###  2.2 GitHub OAuth (ระบบ Login)
 คุณไม่สามารถใช้ GitHub App เดิมที่เป็น `localhost` สำหรับการขึ้น Production ได้ คุณต้องสร้าง App อันใหม่ใน GitHub ผูกกับโดเมนจริงของ Vercel
 
 **ขั้นตอนการดึงค่า:**
@@ -57,7 +57,7 @@
 
 ---
 
-### 🤖 2.3 Google Gemini AI (ระบบ AI Resume)
+###  2.3 Google Gemini AI (ระบบ AI Resume)
 ระบบใช้ Gemini 2.5 Flash ในการสร้าง Resume
 
 **ขั้นตอนการดึงค่า:**
@@ -70,7 +70,7 @@
 
 ---
 
-### 🔐 2.4 ความปลอดภัยของระบบ (JWT & Session)
+###  2.4 ความปลอดภัยของระบบ (JWT & Session)
 การเข้ารหัสข้อมูล Token ของผู้ใช้เพื่อความปลอดภัย
 
 **ขั้นตอนการดึงค่า:**
@@ -81,7 +81,7 @@
 
 ---
 
-### 🌐 2.5 URLs ฝั่ง Frontend และ Backend
+###  2.5 URLs ฝั่ง Frontend และ Backend
 ระบุให้ระบบรู้ว่า Domain จริงๆ ที่ทำงานอยู่บน Vercel คืออะไร
 
 **ตัวแปรที่เกี่ยวข้อง:**

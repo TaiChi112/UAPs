@@ -14,7 +14,7 @@ let ormVault = readFileSync("apps/api/src/db/repositories/orm-vault.repository.t
 ormVault = ormVault.replace(/githubUrl: project.repoUrl \?\? undefined/g, "projectUrl: project.projectUrl ?? undefined");
 ormVault = ormVault.replace(/repoUrl: input.githubUrl \|\| null/g, "projectUrl: input.projectUrl || null");
 ormVault = ormVault.replace(/githubUrl: input.basicInfo.github \|\| null/g, "linkedinUrl: input.basicInfo.linkedin || null");
-ormVault = ormVault.replace(/async getPublicResumes\(\): Promise<any> { return \[\]; }\n  async updateResumeVisibility\(\): Promise<boolean> { return true; }\n/g, "");
+ormVault = ormVault.replace(/async getPublicResumes\(\): Promise<any> { return \[\]; }\n {2}async updateResumeVisibility\(\): Promise<boolean> { return true; }\n/g, "");
 writeFileSync("apps/api/src/db/repositories/orm-vault.repository.ts", ormVault);
 
 // 3. Fix raw-vault.repository.ts
@@ -25,7 +25,7 @@ rawVault = rawVault.replace(/summary: resume.summary,/g, `summary: resume.summar
 rawVault = rawVault.replace(/summary: input.config.summary,/g, `summary: input.config.summary,\n        visibility: resume.visibility ?? "private",`);
 rawVault = rawVault.replace(/async updateCertificate/g, `async getPublicResumes(): Promise<any> { throw new Error("Not implemented"); }\n  async updateResumeVisibility(): Promise<any> { throw new Error("Not implemented"); }\n  async updateCertificate`);
 // also remove duplicate updateResumeStatus if any, but let's just make sure visibility exists on ResumeRow
-rawVault = rawVault.replace(/resume_id: string;/g, `resume_id: string;\n  visibility: string;`);
+rawVault = rawVault.replace(/resume_id: string;/g, "resume_id: string;\n  visibility: string;");
 writeFileSync("apps/api/src/db/repositories/raw-vault.repository.ts", rawVault);
 
 // 4. Fix vault-backend.types.ts

@@ -11,7 +11,7 @@ let raw = readFileSync("apps/api/src/db/repositories/raw-vault.repository.ts", "
 raw = raw.replace(/phone: basicInfo\.phone,/g, "phone: basicInfo.phone,\n        linkedin: basicInfo.linkedin_url,");
 raw = raw.replace(/project_url: project\.projectUrl/g, "projectUrl: project.project_url");
 raw = raw.replace(/visibility: resume\.visibility/g, "visibility: resume.visibility");
-raw = raw.replace(/async getPublicResumes\(\): Promise<any> { throw new Error\("Not implemented"\); }\n  async updateResumeVisibility\(\): Promise<import\("@uaps\/shared\/resume-builder"\)\.SavedResume \| null> { throw new Error\("Not implemented"\); }/g, "");
+raw = raw.replace(/async getPublicResumes\(\): Promise<any> { throw new Error\("Not implemented"\); }\n {2}async updateResumeVisibility\(\): Promise<import\("@uaps\/shared\/resume-builder"\)\.SavedResume \| null> { throw new Error\("Not implemented"\); }/g, "");
 raw = raw.replace(/async updateResumeStatus\(\): Promise<import\("@uaps\/shared\/resume-builder"\)\.SavedResume \| null> { throw new Error\("Not implemented"\); }/g, "async updateResumeStatus(): Promise<import(\"@uaps/shared/resume-builder\").SavedResume | null> { throw new Error(\"Not implemented\"); }\n  async getPublicResumes(): Promise<any> { throw new Error(\"Not implemented\"); }\n  async updateResumeVisibility(): Promise<import(\"@uaps/shared/resume-builder\").SavedResume | null> { throw new Error(\"Not implemented\"); }");
 writeFileSync("apps/api/src/db/repositories/raw-vault.repository.ts", raw);
 
